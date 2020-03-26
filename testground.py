@@ -50,7 +50,8 @@ world.init_nation(
     pop_size=1000,
     avg_compliance=.5,
     avg_age=20,
-    sociability=5
+    sociability=5,
+    borders=['Not Sociable', 'Very Sociable']
 )
 
 world.init_nation(
@@ -61,9 +62,11 @@ world.init_nation(
     sociability=20
 )
 
-world.initiate_infection('Not Sociable')
+world.init_borders()
+
+# world.initiate_infection('Not Sociable')
 world.initiate_infection('Somewhat Sociable')
-world.initiate_infection('Very Sociable')
+# world.initiate_infection('Very Sociable')
 
 world.new_day(days=90, verbose=False)
 world.plot_infections()
