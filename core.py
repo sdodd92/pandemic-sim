@@ -11,6 +11,7 @@ MAX_AGE = 100
 
 class Person:
     next_uid = 0
+
     @classmethod
     def inc_uid(cls):
         cls.next_uid += 1
@@ -31,10 +32,13 @@ class Person:
         self.health = MAX_AGE - (0.9 * self.age)
 
     def receive_exposure(self, infected, date):
+        new_infection = 0
         if infected and not self.immune:
+            new_infection = 1
             self.infected = True
             self.immune = True
             self.infection_date = date
+        return new_infection
 
     def give_exposure(self, date):
         if self.infected:
@@ -59,15 +63,15 @@ class Person:
         return self.alive
 
 
-
-
 class Community:
     @staticmethod
     def pairwise_interaction(person_a, person_b, date):
+        new_infections = 0
         contagion_a = bool(person_a.give_exposure(date) * (np.random.uniform() < CONTAGIOUSNESS))
         contagion_b = bool(person_b.give_exposure(date) * (np.random.uniform() < CONTAGIOUSNESS))
-        person_a.receive_exposure(contagion_b, date)
-        person_b.receive_exposure(contagion_a, date)
+        new_infections += person_a.receive_exposure(contagion_b, date)
+        new_infections += person_b.receive_exposure(contagion_a, date)
+        return new_infections
 
     def __init__(self, sociability):
         self.population = []
@@ -85,6 +89,7 @@ class Community:
         self.pop_size -= 1
 
     def mingle(self, date):
+        new_infections = 0
         if self.pop_size > 1:
             for i in range(self.pop_size):
                 interactions = int(np.random.poisson(self.sociability, 1))
@@ -92,7 +97,8 @@ class Community:
                     j = np.random.randint(0, self.pop_size - 1)
                     while j == i:
                         j = np.random.randint(0, self.pop_size - 1)
-                    self.pairwise_interaction(self.population[i], self.population[j], date)
+                    new_infections += self.pairwise_interaction(self.population[i], self.population[j], date)
+        return new_infections
 
     def initiate_infection(self, person_id=None):
         if person_id is None:

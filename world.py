@@ -110,14 +110,14 @@ class World:
         for day in range(days):
             self.day += 1
             for name, nation in self.nations.items():
-                nation.mingle(self.day)
+                num_infected = nation.mingle(self.day)
                 num_died = nation.update_health(self.day)
                 # num_died = 0
                 if log:
                     log_entry = pd.DataFrame({
                         'Day': [self.day],
                         'Nation': [name],
-                        'num_infected': [float(nation.get_num_infected())],
+                        'num_infected': [float(num_infected)],
                         'num_died': [float(num_died)]
                     })
                     self.daily_log = self.daily_log.append(log_entry)
@@ -125,8 +125,9 @@ class World:
                     print('{} days elapsed'.format(day))
             if self.borders is not None:
                 for border in self.borders:
-                    border.direct_exchange(50)
+                    border.direct_exchange(10)
 
+    # todo refactor plotting logic to put on a nation-by-nation level
     def initiate_infection(self, nation=None):
         if nation is None:
             nations = [key for key in self.nations.keys()]
@@ -134,7 +135,7 @@ class World:
             nation = nations[i]
         self.nations[nation].initiate_infection()
 
-    def plot_infections(self):
+    def plot_daily_infections(self):
         sns.lineplot(
             'Day',
             'num_infected',
@@ -143,7 +144,18 @@ class World:
         )
         return plt
 
-    def plot_deaths(self):
+    def plot_total_infections(self):
+        daily_log = self.daily_log.copy()
+        daily_log['cumu_infected'] = daily_log.groupby('Nation')['num_infected'].cumsum()
+        sns.lineplot(
+            'Day',
+            'cumu_infected',
+            hue='Nation',
+            data=daily_log
+        )
+        return plt
+
+    def plot_daily_deaths(self):
         sns.lineplot(
             'Day',
             'num_died',
@@ -151,3 +163,13 @@ class World:
             data=self.daily_log
         )
         return plt
+
+    def plot_total_deaths(self):
+        daily_log = self.daily_log.copy()
+        daily_log['cumu_died'] = daily_log.groupby('Nation')['num_died'].cumsum()
+        sns.lineplot(
+            'Day',
+            'cumu_died',
+            hue='Nation',
+            data=daily_log
+        )

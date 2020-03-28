@@ -69,9 +69,8 @@ world.init_borders()
 world.initiate_infection('Somewhat Sociable')
 # world.initiate_infection('Very Sociable')
 
-world.new_day(days=90, verbose=False)
-world.plot_infections()
-plt.show()
+world.new_day(days=30, verbose=False)
+world.plot_total_deaths()
+world.plot_total_infections()
 
-world.plot_deaths()
-plt.show()
+
