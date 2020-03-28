@@ -1,69 +1,7 @@
-import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 import pandas as pd
-
-
-BASE_IMMUNITY = 0.8
-CONTAGIOUSNESS = .02
-BASE_MORTALITY = 3
-MAX_AGE = 100
-
-
-class Person:
-    def __init__(self, compliance, age):
-        self.compliance = compliance
-        immunity_factor = BASE_IMMUNITY - 0.01 * age
-        self.immunity = int(np.random.uniform() < immunity_factor)
-        self.age = age
-        self.infected = False
-        self.alive = True
-        self.health = MAX_AGE - self.age
-
-    def update_health(self):
-        if self.alive and self.infected:
-            self.health -= BASE_MORTALITY - (self.immunity * BASE_MORTALITY)
-        if self.health <= 0:
-            self.alive = False
-
-
-class Community:
-    @staticmethod
-    def pairwise_interaction(person_a, person_b):
-        new_infection = np.random.uniform() < CONTAGIOUSNESS
-        if person_a.infected and not person_b.infected:
-            person_b.infected = new_infection
-        elif person_b.infected and not person_a.infected:
-            person_a.infected = new_infection
-
-    def __init__(self, sociability):
-        self.population = []
-        self.sociability = sociability
-        self.pop_size = 0
-
-    def add_member(self, person):
-        self.population.append(person)
-        self.pop_size += 1
-
-    def remove_member(self, person_id=None):
-        if person_id is None:
-            person_id = np.random.randint(0, self.pop_size - 1)
-        del self.population[person_id]
-        self.pop_size -= 1
-
-    def mingle(self):
-        for i in range(self.pop_size):
-            interactions = int(np.random.poisson(self.sociability, 1))
-            for interaction in range(interactions):
-                j = np.random.randint(0, self.pop_size - 1)
-                while j == i:
-                    j = np.random.randint(0, self.pop_size - 1)
-                self.pairwise_interaction(self.population[i], self.population[j])
-
-    def initiate_infection(self, person_id=None):
-        if person_id is None:
-            person_id = np.random.randint(0, self.pop_size - 1)
-        self.population[person_id].infected = True
+from core import *
 
 
 class Nation(Community):
@@ -89,14 +27,14 @@ class Nation(Community):
         return [person.age for person in self.population]
 
     def get_immunities(self):
-        return [person.immunity for person in self.population]
+        return [person.resistance for person in self.population]
 
     def plot_age_distribution(self):
         sns.distplot(self.get_ages())
         return plt
 
     def get_avg_immunity(self):
-        return np.mean([person.immunity for person in self.population])
+        return np.mean([person.resistance for person in self.population])
 
 
 class Border:
@@ -104,9 +42,14 @@ class Border:
     def exchange(crossing_volume, a, b):
         country_a, country_b = a, b
         for crossing in range(crossing_volume):
-            member_to_cross = np.random.randint(0, country_a.pop_size - 1)
-            country_b.add_member(country_a.population[member_to_cross])
-            country_a.remove_member(member_to_cross)
+            pop_size = country_a.pop_size
+            if pop_size > 0:
+                try:  # handle case of population == 1
+                    member_to_cross = np.random.randint(0, country_a.pop_size - 1)
+                except ValueError:
+                    member_to_cross = 0
+                country_b.add_member(country_a.population[member_to_cross])
+                country_a.remove_member(member_to_cross)
 
     def __init__(self, country_a, country_b):
         self.country_a = country_a
@@ -167,13 +110,15 @@ class World:
         for day in range(days):
             self.day += 1
             for name, nation in self.nations.items():
-                nation.mingle()
+                nation.mingle(self.day)
+                num_died = nation.update_health(self.day)
+                # num_died = 0
                 if log:
                     log_entry = pd.DataFrame({
                         'Day': [self.day],
                         'Nation': [name],
                         'num_infected': [float(nation.get_num_infected())],
-                        'num_died': [float(nation.get_num_dead())]
+                        'num_died': [float(num_died)]
                     })
                     self.daily_log = self.daily_log.append(log_entry)
                 if verbose:
@@ -193,6 +138,15 @@ class World:
         sns.lineplot(
             'Day',
             'num_infected',
+            hue='Nation',
+            data=self.daily_log
+        )
+        return plt
+
+    def plot_deaths(self):
+        sns.lineplot(
+            'Day',
+            'num_died',
             hue='Nation',
             data=self.daily_log
         )

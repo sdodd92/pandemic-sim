@@ -33,7 +33,8 @@ plt.show()
 """
 
 
-from base_entities import *
+from world import *
+
 
 world = World()
 
@@ -70,4 +71,7 @@ world.initiate_infection('Somewhat Sociable')
 
 world.new_day(days=90, verbose=False)
 world.plot_infections()
+plt.show()
+
+world.plot_deaths()
 plt.show()
