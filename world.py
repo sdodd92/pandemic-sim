@@ -5,12 +5,13 @@ from core import *
 
 
 class Nation(Community):
-    def __init__(self, pop_size, avg_compliance, avg_age, sociability):
+    def __init__(self, pop_size, avg_compliance, avg_age, sociability, base_immunity, max_age):
         super().__init__(sociability)
         self.pop_size = pop_size
         compliances = (np.random.uniform(size=pop_size) < avg_compliance).astype(int)
-        ages = np.floor(np.random.uniform(20, MAX_AGE, size=pop_size))
-        self.population = [Person(compliance, age) for compliance, age in zip(compliances, ages)]
+        ages = np.floor(np.random.uniform(20, max_age, size=pop_size))
+        healths = [max_age - (0.9 * age) for age in ages]
+        self.population = [Person(compliance, age, health, base_immunity) for compliance, age, health in zip(compliances, ages, healths)]
         self.sociability = sociability
         self.border_open = True
 
@@ -28,6 +29,9 @@ class Nation(Community):
 
     def get_immunities(self):
         return [person.resistance for person in self.population]
+
+    def get_health(self):
+        return [person.health for person in self.population]
 
     def plot_age_distribution(self):
         sns.distplot(self.get_ages())
@@ -78,7 +82,9 @@ class Border:
 
 
 class World:
-    def __init__(self):
+    def __init__(self, base_immunity, max_age):
+        self.base_immunity = base_immunity
+        self.max_age = max_age
         self.nations = {}
         self.border_enum = None
         self.borders = None
@@ -87,7 +93,7 @@ class World:
 
     def init_nation(self, name, nation=None, borders=None, **kwargs):
         if nation is None:
-            nation = Nation(**kwargs)
+            nation = Nation(base_immunity=self.base_immunity, max_age=self.max_age, **kwargs)
         self.nations[name] = nation
         if borders is not None:
             if self.border_enum is None:
@@ -128,12 +134,12 @@ class World:
                     border.direct_exchange(10)
 
     # todo refactor plotting logic to put on a nation-by-nation level
-    def initiate_infection(self, nation=None):
+    def initiate_infection(self, pathogen, nation=None):
         if nation is None:
             nations = [key for key in self.nations.keys()]
             i = np.random.randint(0, len(nations) - 1)
             nation = nations[i]
-        self.nations[nation].initiate_infection()
+        self.nations[nation].initiate_infection(pathogen)
 
     def plot_daily_infections(self):
         sns.lineplot(

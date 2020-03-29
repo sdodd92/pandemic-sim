@@ -1,12 +1,18 @@
 import numpy as np
+from copy import deepcopy
 
-BASE_IMMUNITY = 0.8
-CONTAGIOUSNESS = .02
-BASE_MORTALITY = 5
-NON_INFECTIOUS_PERIOD = 1
-INCUBATION_PERIOD = 3
-DISEASE_LENGTH = 10
-MAX_AGE = 100
+
+class Pathogen:
+    def __init__(self, contagiousness, base_mortality, incubation_period, disease_length, latent_period):
+        self.contagiousness = contagiousness
+        self.base_mortality = base_mortality
+        self.incubation_period = incubation_period
+        self.disease_length = disease_length
+        self.latent_period = latent_period
+
+    def replicate(self):
+        new_copy = deepcopy(self)
+        return new_copy
 
 
 class Person:
@@ -16,11 +22,11 @@ class Person:
     def inc_uid(cls):
         cls.next_uid += 1
 
-    def __init__(self, compliance, age):
+    def __init__(self, compliance, age, health, base_immunity):
         self.uid = self.next_uid
         self.inc_uid()
         self.compliance = compliance
-        resistance_factor = BASE_IMMUNITY - 0.01 * age
+        resistance_factor = base_immunity - 0.01 * age
         self.resistance = np.maximum(resistance_factor, 0)
         self.immune = False
         self.age = age
@@ -29,31 +35,35 @@ class Person:
         self.sick = False
         self.alive = True
         self.infection_date = None
-        self.health = MAX_AGE - (0.9 * self.age)
+        self.health = health
+        self.infection = None
 
-    def receive_exposure(self, infected, date):
+    def receive_exposure(self, infection, date, override=False):
         new_infection = 0
-        if infected and not self.immune:
+        infected = False
+        if infection is not None:
+            infected = np.random.uniform() < infection.contagiousness
+        if (infected and not self.immune) or override:
             new_infection = 1
             self.infected = True
             self.immune = True
+            self.infection = infection
             self.infection_date = date
         return new_infection
 
     def give_exposure(self, date):
         if self.infected:
-            if (date - self.infection_date) > NON_INFECTIOUS_PERIOD:
-                self.contagious = True
-        return self.contagious
+            if (date - self.infection_date) > self.infection.latent_period:
+                return self.infection
 
     def check_health(self, date):
         if self.infected:
             days_elapsed = date - self.infection_date
-            if days_elapsed > INCUBATION_PERIOD:
-                days_elapsed = days_elapsed - INCUBATION_PERIOD
-                if days_elapsed < DISEASE_LENGTH:
+            if days_elapsed > self.infection.incubation_period:
+                days_elapsed = days_elapsed - self.infection.incubation_period
+                if days_elapsed < self.infection.disease_length:
                     self.sick = True
-                    health_check = self.health - (BASE_MORTALITY - (self.resistance * BASE_MORTALITY)) * days_elapsed
+                    health_check = self.health - (self.infection.base_mortality - (self.resistance * self.infection.base_mortality)) * days_elapsed
                     if health_check <= 0:
                         self.alive = False
                 else:
@@ -67,8 +77,8 @@ class Community:
     @staticmethod
     def pairwise_interaction(person_a, person_b, date):
         new_infections = 0
-        contagion_a = bool(person_a.give_exposure(date) * (np.random.uniform() < CONTAGIOUSNESS))
-        contagion_b = bool(person_b.give_exposure(date) * (np.random.uniform() < CONTAGIOUSNESS))
+        contagion_a = person_a.give_exposure(date)
+        contagion_b = person_b.give_exposure(date)
         new_infections += person_a.receive_exposure(contagion_b, date)
         new_infections += person_b.receive_exposure(contagion_a, date)
         return new_infections
@@ -100,10 +110,10 @@ class Community:
                     new_infections += self.pairwise_interaction(self.population[i], self.population[j], date)
         return new_infections
 
-    def initiate_infection(self, person_id=None):
+    def initiate_infection(self, pathogen, person_id=None):
         if person_id is None:
             person_id = np.random.randint(0, self.pop_size - 1)
-        self.population[person_id].receive_exposure(True, 0)
+        self.population[person_id].receive_exposure(pathogen, 0, override=True)
 
     def update_health(self, date):
         died = 0
