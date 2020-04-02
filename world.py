@@ -5,13 +5,13 @@ from core import *
 
 
 class Nation(Community):
-    def __init__(self, pop_size, avg_compliance, avg_age, sociability, base_immunity, max_age):
+    def __init__(self, pop_size, avg_compliance, avg_age, sociability, base_resistance, max_age):
         super().__init__(sociability)
         self.pop_size = pop_size
         compliances = (np.random.uniform(size=pop_size) < avg_compliance).astype(int)
         ages = np.floor(np.random.uniform(20, max_age, size=pop_size))
         healths = [max_age - (0.9 * age) for age in ages]
-        self.population = [Person(compliance, age, health, base_immunity) for compliance, age, health in zip(compliances, ages, healths)]
+        self.population = [Person(compliance, age, health, base_resistance) for compliance, age, health in zip(compliances, ages, healths)]
         self.sociability = sociability
         self.border_open = True
 
@@ -93,7 +93,7 @@ class World:
 
     def init_nation(self, name, nation=None, borders=None, **kwargs):
         if nation is None:
-            nation = Nation(base_immunity=self.base_immunity, max_age=self.max_age, **kwargs)
+            nation = Nation(base_resistance=self.base_immunity, max_age=self.max_age, **kwargs)
         self.nations[name] = nation
         if borders is not None:
             if self.border_enum is None:
@@ -137,45 +137,61 @@ class World:
     def initiate_infection(self, pathogen, nation=None):
         if nation is None:
             nations = [key for key in self.nations.keys()]
-            i = np.random.randint(0, len(nations) - 1)
+            i = np.random.randint(0, len(nations))
             nation = nations[i]
         self.nations[nation].initiate_infection(pathogen, date=self.day)
 
-    def plot_daily_infections(self):
-        sns.lineplot(
-            'Day',
-            'num_infected',
-            hue='Nation',
-            data=self.daily_log
-        )
+    def plot_daily_infections(self, ax=None, nation=None):
+        if nation is None:
+            sns.lineplot(
+                'Day',
+                'num_infected',
+                hue='Nation',
+                data=self.daily_log,
+                ax=ax
+            )
+        else:
+            sns.lineplot(
+                'Day',
+                'num_infected',
+                data=self.daily_log.loc[self.daily_log['Nation'] == nation],
+                ax=ax
+            )
         return plt
 
-    def plot_total_infections(self):
+    def plot_total_infections(self, ax=None):
         daily_log = self.daily_log.copy()
         daily_log['cumu_infected'] = daily_log.groupby('Nation')['num_infected'].cumsum()
         sns.lineplot(
             'Day',
             'cumu_infected',
             hue='Nation',
-            data=daily_log
+            data=daily_log,
+            ax=ax
         )
         return plt
 
-    def plot_daily_deaths(self):
+    def plot_daily_deaths(self, ax=None):
         sns.lineplot(
             'Day',
             'num_died',
             hue='Nation',
-            data=self.daily_log
+            data=self.daily_log,
+            ax=ax
         )
         return plt
 
-    def plot_total_deaths(self):
+    def plot_total_deaths(self, ax=None, nation=None, legend=True):
         daily_log = self.daily_log.copy()
         daily_log['cumu_died'] = daily_log.groupby('Nation')['num_died'].cumsum()
-        sns.lineplot(
-            'Day',
-            'cumu_died',
-            hue='Nation',
-            data=daily_log
-        )
+        if nation is None:
+            sns.lineplot(
+                'Day',
+                'cumu_died',
+                hue='Nation',
+                data=daily_log,
+                ax=ax
+            )
+        else:
+            daily_log.loc[daily_log['Nation'] == nation].plot('Day', 'cumu_died', legend=legend, ax=ax)
+        return plt
