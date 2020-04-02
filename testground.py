@@ -38,7 +38,7 @@ import pandas as pd
 
 
 world = World(
-    base_immunity=0.8,
+    base_resistance=0.5,
     max_age=100
 )
 
@@ -72,7 +72,8 @@ world.init_borders()
 
 virus = Pathogen(
     contagiousness=0.02,
-    base_mortality=5,
+    # base_mortality=5,
+    mortality_rate=0.2,
     incubation_period=3,
     disease_length=10,
     latent_period=1
@@ -84,12 +85,12 @@ world.initiate_infection(virus, nation='Very Sociable')
 
 world.new_day(days=30, verbose=False)
 world.plot_total_deaths()
-world.plot_total_infections()
+# world.plot_total_infections()
 
 
-example_nation = world.nations['Very Sociable']
-health_curve = pd.DataFrame({
-    'health': example_nation.get_health(),
-    'age': example_nation.get_ages()
-})
-health_curve.groupby('age').mean().plot()
+# example_nation = world.nations['Very Sociable']
+# health_curve = pd.DataFrame({
+#     'health': example_nation.get_health(),
+#     'age': example_nation.get_ages()
+# })
+# health_curve.groupby('age').mean().plot()

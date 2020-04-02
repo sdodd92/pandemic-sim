@@ -82,8 +82,8 @@ class Border:
 
 
 class World:
-    def __init__(self, base_immunity, max_age):
-        self.base_immunity = base_immunity
+    def __init__(self, base_resistance, max_age):
+        self.base_immunity = base_resistance
         self.max_age = max_age
         self.nations = {}
         self.border_enum = None
@@ -139,7 +139,7 @@ class World:
             nations = [key for key in self.nations.keys()]
             i = np.random.randint(0, len(nations) - 1)
             nation = nations[i]
-        self.nations[nation].initiate_infection(pathogen)
+        self.nations[nation].initiate_infection(pathogen, date=self.day)
 
     def plot_daily_infections(self):
         sns.lineplot(
