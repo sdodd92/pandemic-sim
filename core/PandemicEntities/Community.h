@@ -18,15 +18,20 @@ class Community {
 public:
     Community();
     Community(const Community& orig);
-    void add_person(Person person);
+    
+    void add_person(Person *person);
+    long mingle(int date);
+    
+    void initiate_infection(Pathogen pathogen, int date, unsigned long member);
+    
+    unsigned long get_num_infected();
+    
     virtual ~Community();
 private:
     long pop_size;
-    vector<Person> population;
+    vector<Person*> population;
     
     std::default_random_engine generator;
-    
-    long mingle(int date);
     
     long pairwise_interaction(Person *person_1, Person *person_2, int date);
 };

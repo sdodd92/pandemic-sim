@@ -15,21 +15,26 @@ Person::Person(double compliance, double resistance, double sociability) {
     this->resistance = resistance;
     this->compliance = compliance;
     this->sociability = sociability;
-       
+    
 }
 
-Pathogen Person::catch_infection(Pathogen infection, int date) {
-    if (!(this->infected | this->immune)) {
+
+bool Person::catch_infection(Pathogen infection, int date, bool force) {
+    bool new_infected = false;
+    if (force | !(this->infected | this->immune)) {
         this->infected = true;
         this->immune = true;
         this->infection = infection;
         this->infection_date = date;
+        
+        new_infected = true;
+        
     }
     
     
-    Pathogen new_infection = this->infection;
+//    Pathogen new_infection = this->infection;
     
-    return new_infection;
+    return new_infected;
 }
 
 

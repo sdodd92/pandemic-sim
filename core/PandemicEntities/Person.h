@@ -41,8 +41,8 @@ public:
         double sociability = this->sociability;
         return sociability;
     }
-    
-    Pathogen catch_infection(Pathogen infection, int date);
+        
+    bool catch_infection(Pathogen infection, int date, bool force);
     
     Pathogen pass_infection();
     
