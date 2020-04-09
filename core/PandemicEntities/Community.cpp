@@ -8,7 +8,7 @@
 #include "Community.h"
 
 Community::Community() {
-    this->pop_size = 0;
+    pop_size = 0;
 }
 
 Community::Community(const Community& orig) {
@@ -16,21 +16,32 @@ Community::Community(const Community& orig) {
 
 void Community::add_person(Person *person) {
     
-    this->pop_size++;
-    this->population.push_back(person);
+    pop_size++;
+    population.push_back(person);
     
 }
 
-void Community::initiate_infection(Pathogen pathogen, int date, unsigned long member) {
+void Community::add_person(double compliance, double resistance, double sociability) {
+    Person *new_person = new Person(compliance, resistance, sociability);
+    this->add_person(new_person);
+}
+
+
+unsigned long Community::initiate_infection(Pathogen pathogen, int date, unsigned long member) {
     
-    this->population[member]->catch_infection(pathogen, date, true);
+    Person *patient_zero = population[member];
+    
+    patient_zero->catch_infection(pathogen, date, true);
+    unsigned long patient_zero_id = patient_zero->get_uid();
+    
+    return patient_zero_id;    
     
 }
 
 unsigned long Community::get_num_infected() {
     unsigned long num_infected = 0;
     
-    for (Person *person : this->population) 
+    for (Person *person : population) 
         if (person->is_infected())
             num_infected++;
     
@@ -53,7 +64,7 @@ long Community::pairwise_interaction(Person* person_1, Person* person_2, int dat
         if (date_delta > latent_period & date_delta < disease_course) {
             std::uniform_real_distribution<double> dist(0.0, 1.0);
             
-            float infected = dist(this->generator);
+            float infected = dist(generator);
             
             if (infected < new_infection.contagiousness) {
                 //maybe add mutation logic here...?
@@ -71,8 +82,8 @@ long Community::mingle(int date) {
     long new_infections = 0;
     long pop2 = 1;
     
-    long pop_size = this->pop_size;
-    for (long i=0; i < pop_size; i++) {
+    long popsize = this->pop_size;
+    for (long i=0; i < popsize; i++) {
         
         Person *person_1 = (this->population)[i];
         int sociabiltiy = person_1->get_sociability(); // todo change this to pop-level
@@ -83,9 +94,9 @@ long Community::mingle(int date) {
         
         int interactions = sociabiltiy;
         for (int ii=0; ii < interactions; ii++) {
-            std::uniform_int_distribution<long> pop_dist(0, pop_size - 1);
+            std::uniform_int_distribution<long> pop_dist(0, popsize - 1);
             long j = pop_dist(this->generator);
-            while (j == i && j < pop_size)
+            while (j == i && j < popsize)
                 j = pop_dist(this->generator);
            
             Person *person_2 = (this->population)[j];

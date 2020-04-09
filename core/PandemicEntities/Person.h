@@ -41,6 +41,8 @@ public:
         double sociability = this->sociability;
         return sociability;
     }
+    
+    unsigned long get_uid();
         
     bool catch_infection(Pathogen infection, int date, bool force);
     
@@ -48,6 +50,8 @@ public:
     
 private:
     double compliance, resistance, sociability;
+    
+    static void increment_uid();
     
     Pathogen infection;
     
@@ -61,6 +65,9 @@ private:
     ;
     
     int infection_date;
+    
+    unsigned long uid;
+    static unsigned long uid_counter;
     
     
 

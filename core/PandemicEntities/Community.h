@@ -20,9 +20,12 @@ public:
     Community(const Community& orig);
     
     void add_person(Person *person);
+    void add_person(double compliance, double resistance, double sociability);
+    void remove_person(unsigned long id);
+    
     long mingle(int date);
     
-    void initiate_infection(Pathogen pathogen, int date, unsigned long member);
+    unsigned long initiate_infection(Pathogen pathogen, int date, unsigned long member);
     
     unsigned long get_num_infected();
     
