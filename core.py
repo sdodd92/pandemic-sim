@@ -34,39 +34,28 @@ class Person:
     def inc_uid(cls):
         cls.next_uid += 1
 
-    def __init__(self, compliance, health, base_immunity, resistance=None, age=None):
-        self.uid = self.next_uid
-        self.inc_uid()
-        self.compliance = compliance
+    def __init__(self, compliance, resistance):
         self.resistance = resistance
-        if resistance is None:
-            if age is not None:
-                resistance_factor = base_immunity - 0.01 * age
-                self.resistance = np.maximum(resistance_factor, 0)
-            else:
-                self.resistance = base_immunity
+        self.compliance = compliance
         self.immune = False
-        self.age = age
         self.infected = False
         self.contagious = False
         self.sick = False
         self.alive = True
         self.infection_date = None
-        self.health = health
-        self.infection = None
+        self.infection = Pathogen(*([0] * 5))
 
-    def receive_exposure(self, infection, date, override=False):
-        new_infection = 0
-        infected = False
-        if infection is not None:
-            infected = np.random.uniform() < infection.contagiousness
-        if (infected and not self.immune) or override:
-            new_infection = 1
+    def get_infection(self, infection, date):
+        if not self.infected and not self.immune:
             self.infected = True
             self.immune = True
             self.infection = infection
             self.infection_date = date
-        return new_infection
+        return self.infection
+
+    def pass_infection(self):
+        # could put more complex code here...
+        return self.infection
 
     def give_exposure(self, date):
         if self.infected:
@@ -92,13 +81,16 @@ class Person:
 
 class Community:
     @staticmethod
-    def pairwise_interaction(person_a, person_b, date):
-        new_infections = 0
-        contagion_a = person_a.give_exposure(date)
-        contagion_b = person_b.give_exposure(date)
-        new_infections += person_a.receive_exposure(contagion_b, date)
-        new_infections += person_b.receive_exposure(contagion_a, date)
-        return new_infections
+    def pairwise_interaction(person1, person2, date):
+        new_infection = 0
+        if person1.infected:
+            date_delta = date - person1.infection_date
+            infection = person1.pass_infection()
+            if date_delta > infection.latent_period and date_delta < (infection.incubation_period + infection.disease_length):
+                if np.random.uniform() < infection.contagiousness:
+                    person2.get_infection(infection, date)
+                    new_infection = 1
+        return new_infection
 
     def __init__(self, sociability):
         self.population = []
@@ -143,3 +135,18 @@ class Community:
                 self.remove_member(n)
                 died += 1
         return died
+
+    def get_infection_rate(self):
+        return np.mean([person.infected for person in self.population])
+
+    def get_num_infected(self):
+        return np.sum([person.infected for person in self.population])
+
+    def get_num_dead(self):
+        return np.sum([not person.alive for person in self.population])
+
+    def get_num_immune(self):
+        return np.sum([person.immune for person in self.population])
+
+    def get_health(self):
+        return [person.health for person in self.population]

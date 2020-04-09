@@ -5,41 +5,32 @@ from core import *
 
 
 class Nation(Community):
-    def __init__(self, pop_size, avg_compliance, avg_age, sociability, base_resistance, max_age):
+    def __init__(self, pop_size, avg_compliance, avg_age, sociability, base_resistance, gdp, hospital_beds):
         super().__init__(sociability)
-        self.pop_size = pop_size
+        self.gdp = gdp
         compliances = (np.random.uniform(size=pop_size) < avg_compliance).astype(int)
-        ages = np.floor(np.random.uniform(20, max_age, size=pop_size))
-        healths = [max_age - (0.9 * age) for age in ages]
-        self.population = [Person(compliance, age, health, base_resistance) for compliance, age, health in zip(compliances, ages, healths)]
+        self.population = [Person(compliance, base_resistance) for compliance in compliances]
         self.sociability = sociability
         self.border_open = True
-
-    def get_infection_rate(self):
-        return np.mean([person.infected for person in self.population])
-
-    def get_num_infected(self):
-        return np.sum([person.infected for person in self.population])
-
-    def get_num_dead(self):
-        return np.sum([not person.alive for person in self.population])
-
-    def get_ages(self):
-        return [person.age for person in self.population]
-
-    def get_immunities(self):
-        return [person.resistance for person in self.population]
-
-    def get_health(self):
-        return [person.health for person in self.population]
+        self.avg_age = avg_age
+        self.avg_compliance = avg_compliance
+        self.hospital_beds = hospital_beds
+        self.available_hospital_beds = self.hospital_beds
 
     def plot_age_distribution(self):
         sns.distplot(self.get_ages())
         return plt
 
-    def get_avg_immunity(self):
-        return np.mean([person.resistance for person in self.population])
+    def impose_lockdown(self, mandated_reduction):
+        sociability_reduction = mandated_reduction * self.avg_compliance
+        self.gdp *= 1 - mandated_reduction
+        self.sociability *= 1 - sociability_reduction
 
+    def hospitalize_sick(self):
+        for person in self.population:
+            if person.sick and self.available_hospital_beds > 0:
+                person.resistance *= 1.2
+                self.available_hospital_beds -= 1
 
 class Border:
     @staticmethod
@@ -54,6 +45,12 @@ class Border:
                     member_to_cross = 0
                 country_b.add_member(country_a.population[member_to_cross])
                 country_a.remove_member(member_to_cross)
+
+    @staticmethod
+    def share(person_id, a, b):
+        country_a, country_b = a, b
+        person_to_share = country_a.population[person_id]
+        country_b.add_member(person_to_share)
 
     def __init__(self, country_a, country_b):
         self.country_a = country_a
@@ -82,9 +79,7 @@ class Border:
 
 
 class World:
-    def __init__(self, base_resistance, max_age):
-        self.base_immunity = base_resistance
-        self.max_age = max_age
+    def __init__(self):
         self.nations = {}
         self.border_enum = None
         self.borders = None
@@ -93,7 +88,7 @@ class World:
 
     def init_nation(self, name, nation=None, borders=None, **kwargs):
         if nation is None:
-            nation = Nation(base_resistance=self.base_immunity, max_age=self.max_age, **kwargs)
+            nation = Nation(**kwargs)
         self.nations[name] = nation
         if borders is not None:
             if self.border_enum is None:
