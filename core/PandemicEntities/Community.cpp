@@ -62,15 +62,15 @@ long Community::pairwise_interaction(Person* person_1, Person* person_2, int dat
         int date_delta = date - person_1->get_date_infected();
         Pathogen *new_infection = person_1->pass_infection();
         
-        int latent_period = new_infection->latent_period;
-        int disease_course = new_infection->disease_length + new_infection->incubation_period;
+        int latent_period = new_infection->get_latent_period();
+        int disease_course = new_infection->get_disease_length() + new_infection->get_incubation_period();
         
         if (date_delta > latent_period & date_delta < disease_course) {
             std::uniform_real_distribution<double> dist(0.0, 1.0);
             
             float infected = dist(generator);
             
-            if (infected < new_infection->contagiousness) {
+            if (infected < new_infection->get_contagiousness()) {
                 //maybe add mutation logic here...?
                 is_infected += person_2->catch_infection(new_infection, date, false);
             }

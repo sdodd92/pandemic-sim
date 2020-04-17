@@ -30,15 +30,15 @@ public:
     double get_mortality_rate() {
         return mortality_rate;
     }
-    double get_disease_length() {
+    int get_disease_length() {
         return disease_length;
     }  
     
-    double get_incubation_period() {
+    int get_incubation_period() {
         return incubation_period;
     }
     
-    double get_latent_period() {
+    int get_latent_period() {
         return latent_period;
     }
     
