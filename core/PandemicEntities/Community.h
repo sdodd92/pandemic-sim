@@ -17,15 +17,17 @@ using namespace std;
 class Community {
 public:
     Community();
-    Community(const Community& orig);
+//    Community(const Community& orig);
+    
+    Community(int sociability);
     
     void add_person(Person *person);
-    void add_person(double compliance, double resistance, double sociability);
+    void add_person(double compliance, double resistance);
     void remove_person(unsigned long id);
     
     long mingle(int date);
     
-    unsigned long initiate_infection(Pathogen pathogen, int date, unsigned long member);
+    unsigned long initiate_infection(Pathogen *pathogen, int date, unsigned long member);
     
     unsigned long get_num_infected();
     
@@ -33,6 +35,8 @@ public:
 private:
     long pop_size;
     vector<Person*> population;
+    
+    int base_sociability;
     
     std::default_random_engine generator;
     

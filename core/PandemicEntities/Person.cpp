@@ -6,6 +6,7 @@
  */
 
 #include "Person.h"
+#include "Pathogen.h"
 
 
 unsigned long Person::uid_counter = 0;
@@ -17,16 +18,14 @@ void Person::increment_uid() {
 Person::Person() {
     resistance = 0.5;
     compliance = 0.5;
-    sociability = 0.5;
     
     increment_uid();
 }
 
-Person::Person(double compliance_factor, double resistance_factor, double sociability_factor) {
+Person::Person(double compliance_factor, double resistance_factor) {
     
     resistance = resistance_factor;
     compliance = compliance_factor;
-    sociability = sociability_factor;
    
     uid = uid_counter;
     increment_uid();
@@ -39,12 +38,12 @@ unsigned long Person::get_uid() {
 }
 
 
-bool Person::catch_infection(Pathogen infection, int date, bool force) {
+bool Person::catch_infection(Pathogen *infection, int date, bool force) {
     bool new_infected = false;
     if (force | !(infected | immune)) {
         infected = true;
         immune = true;
-        infection = infection;
+        this->infection = infection;
         infection_date = date;
         
         new_infected = true;
@@ -58,9 +57,9 @@ bool Person::catch_infection(Pathogen infection, int date, bool force) {
 }
 
 
-Pathogen Person::pass_infection() {
+Pathogen* Person::pass_infection() {
     
-    Pathogen new_infection = infection;
+    Pathogen *new_infection = infection;
     
     // put more complex code here...?
     

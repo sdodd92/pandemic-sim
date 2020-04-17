@@ -8,23 +8,13 @@
 #ifndef PERSON_H
 #define	PERSON_H
 
-struct Pathogen {
-    double 
-        contagiousness, 
-        mortality_rate
-        ;
-    int 
-    disease_length,
-    incubation_period,
-    latent_period
-    ;
-} ;
+#include "Pathogen.h"
 
 class Person {
 public:   
     Person();
     Person(const Person& orig);
-    Person(double compliance, double resistance, double sociability);
+    Person(double compliance, double resistance);
     virtual ~Person();
     
     unsigned int get_date_infected() {
@@ -37,23 +27,19 @@ public:
         return infected;
     }
     
-    double get_sociability() {
-        double sociability = this->sociability;
-        return sociability;
-    }
     
     unsigned long get_uid();
         
-    bool catch_infection(Pathogen infection, int date, bool force);
+    bool catch_infection(Pathogen *infection, int date, bool force);
     
-    Pathogen pass_infection();
+    Pathogen* pass_infection();
     
 private:
-    double compliance, resistance, sociability;
+    double compliance, resistance;
     
     static void increment_uid();
     
-    Pathogen infection;
+    Pathogen *infection;
     
     bool
             infected=false,
