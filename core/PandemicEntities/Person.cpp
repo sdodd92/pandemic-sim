@@ -56,6 +56,30 @@ bool Person::catch_infection(Pathogen *infection, int date, bool force) {
     return new_infected;
 }
 
+bool Person::survival_update(int date) {
+    bool survived = true;
+    if (infected) {
+        
+        int days_elapsed  ;      
+//        int incubation_period = infection->get_incubation_period();
+        if ((days_elapsed = date - infection_date) < infection->get_disease_length()) {
+            sick = true;
+            if (infection->kill(resistance)) {
+                alive = false;
+                survived = false;
+            }
+                
+        } else {
+            sick = false;
+            infected = false;
+        }
+        
+        return survived;
+        
+    }
+    
+}
+
 
 Pathogen* Person::pass_infection() {
     
@@ -65,8 +89,6 @@ Pathogen* Person::pass_infection() {
     
     return new_infection;
     
-}
-Person::Person(const Person& orig) {
 }
 
 Person::~Person() {

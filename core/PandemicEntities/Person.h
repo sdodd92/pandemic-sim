@@ -32,6 +32,10 @@ public:
         
     bool catch_infection(Pathogen *infection, int date, bool force);
     
+    bool survival_update(int date);
+    
+    bool is_alive() {return alive;};
+    
     Pathogen* pass_infection();
     
 private:

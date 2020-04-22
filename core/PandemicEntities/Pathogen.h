@@ -8,6 +8,11 @@
 #ifndef PATHOGEN_H
 #define	PATHOGEN_H
 
+#include <random>
+#include <ctime>
+
+
+
 class Pathogen {
 public:
     Pathogen();
@@ -22,6 +27,9 @@ public:
     
     Pathogen(const Pathogen& orig);
     virtual ~Pathogen();
+    
+    bool kill(double host_resistance);
+    bool kill() {return true;}
     
     double get_contagiousness() {
         return contagiousness;
@@ -48,6 +56,10 @@ private:
     double contagiousness, mortality_rate;
     
     int disease_length, incubation_period, latent_period;
+    
+    
+    std::random_device r;
+    std::mt19937 generator{r()};
 
 };
 

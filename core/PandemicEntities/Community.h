@@ -11,6 +11,8 @@
 #include "Person.h"
 #include <vector>
 #include <random>
+#include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -31,6 +33,10 @@ public:
     
     unsigned long get_num_infected();
     
+    unsigned long update_health(int date);
+    
+    unsigned long get_num_died();
+    
     virtual ~Community();
 private:
     long pop_size;
@@ -38,7 +44,9 @@ private:
     
     int base_sociability;
     
-    std::default_random_engine generator;
+    
+    std::random_device r;
+    std::mt19937 generator{r()};
     
     long pairwise_interaction(Person *person_1, Person *person_2, int date);
 };
