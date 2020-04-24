@@ -1,0 +1,2 @@
+PKG_LIBS = -L/home/sam/Documents/pandemic-sim/core -lpandemicentities
+PKG_CXXFLAGS = -std=c++11
