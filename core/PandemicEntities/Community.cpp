@@ -85,9 +85,11 @@ long Community::pairwise_interaction(Person* person_1, Person* person_2, int dat
 long Community::mingle(int date) {
     long new_infections = 0; 
     
+    Person *person_1, *person_2;
+    
     for (long i=0;pop_size > 1 & i < pop_size; i++) {
         
-        Person *person_1 = population[i];
+        person_1 = population[i];
         
         if (person_1->is_alive()) { //don't iterate on dead ppl (efficiency...)
             
@@ -105,7 +107,7 @@ long Community::mingle(int date) {
                 std::uniform_int_distribution<long> draw_interactee(0, pop_size - 1);
                 
                 long j = draw_interactee(generator);
-                Person *person_2 = population[j];
+                person_2 = population[j];
                 
                 while (i == j | !person_2->is_alive()){
                     j = draw_interactee(generator);
