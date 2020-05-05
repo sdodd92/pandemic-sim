@@ -153,6 +153,15 @@ unsigned long Community::get_num_died() {
     return num_died;
 }
 
-Community::~Community() {
+
+
+void Community::reduce_sociability(double reduction_factor) {
+    
+    if (base_sociability >= 0)
+        base_sociability *= reduction_factor;
+    else
+        base_sociability = pop_size * reduction_factor;
+    
+    
 }
 

@@ -58,8 +58,9 @@ private:
     int disease_length, incubation_period, latent_period;
     
     
-    std::random_device r;
-    std::mt19937 generator{r()};
+
+    std::mt19937 generator;
+    
 
 };
 

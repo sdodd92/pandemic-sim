@@ -37,13 +37,20 @@ public:
     
     unsigned long get_num_died();
     
-    virtual ~Community();
+    int get_sociability() {return base_sociability;};
+    
+    void change_sociability(int new_sociability) 
+    {base_sociability = new_sociability;} ;
+    
+    void reduce_sociability(double reduction_factor);
+    
+//    virtual ~Community();
 private:
     long pop_size;
     vector<Person*> population;
     
     int base_sociability;
-    
+
     
     std::random_device r;
     std::mt19937 generator{r()};
