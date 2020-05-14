@@ -6,27 +6,39 @@
 using namespace Rcpp;
 
 // test_params
-List test_params(int days, unsigned long pop_size, int sociability, double contagiousness, double mortality_rate, double resistance, int disease_length, int incubation_period, int latent_period);
-RcppExport SEXP _Rpandemic_test_params(SEXP daysSEXP, SEXP pop_sizeSEXP, SEXP sociabilitySEXP, SEXP contagiousnessSEXP, SEXP mortality_rateSEXP, SEXP resistanceSEXP, SEXP disease_lengthSEXP, SEXP incubation_periodSEXP, SEXP latent_periodSEXP) {
+List test_params(int days, unsigned long pop_size, int sociability, double resistance, List virusParams);
+RcppExport SEXP _Rpandemic_test_params(SEXP daysSEXP, SEXP pop_sizeSEXP, SEXP sociabilitySEXP, SEXP resistanceSEXP, SEXP virusParamsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type days(daysSEXP);
     Rcpp::traits::input_parameter< unsigned long >::type pop_size(pop_sizeSEXP);
     Rcpp::traits::input_parameter< int >::type sociability(sociabilitySEXP);
-    Rcpp::traits::input_parameter< double >::type contagiousness(contagiousnessSEXP);
-    Rcpp::traits::input_parameter< double >::type mortality_rate(mortality_rateSEXP);
     Rcpp::traits::input_parameter< double >::type resistance(resistanceSEXP);
-    Rcpp::traits::input_parameter< int >::type disease_length(disease_lengthSEXP);
-    Rcpp::traits::input_parameter< int >::type incubation_period(incubation_periodSEXP);
-    Rcpp::traits::input_parameter< int >::type latent_period(latent_periodSEXP);
-    rcpp_result_gen = Rcpp::wrap(test_params(days, pop_size, sociability, contagiousness, mortality_rate, resistance, disease_length, incubation_period, latent_period));
+    Rcpp::traits::input_parameter< List >::type virusParams(virusParamsSEXP);
+    rcpp_result_gen = Rcpp::wrap(test_params(days, pop_size, sociability, resistance, virusParams));
+    return rcpp_result_gen;
+END_RCPP
+}
+// try_lockdown
+List try_lockdown(int days, List popParams, List virusParams, unsigned long sensitivity, double aggressiveness);
+RcppExport SEXP _Rpandemic_try_lockdown(SEXP daysSEXP, SEXP popParamsSEXP, SEXP virusParamsSEXP, SEXP sensitivitySEXP, SEXP aggressivenessSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type days(daysSEXP);
+    Rcpp::traits::input_parameter< List >::type popParams(popParamsSEXP);
+    Rcpp::traits::input_parameter< List >::type virusParams(virusParamsSEXP);
+    Rcpp::traits::input_parameter< unsigned long >::type sensitivity(sensitivitySEXP);
+    Rcpp::traits::input_parameter< double >::type aggressiveness(aggressivenessSEXP);
+    rcpp_result_gen = Rcpp::wrap(try_lockdown(days, popParams, virusParams, sensitivity, aggressiveness));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_Rpandemic_test_params", (DL_FUNC) &_Rpandemic_test_params, 9},
+    {"_Rpandemic_test_params", (DL_FUNC) &_Rpandemic_test_params, 5},
+    {"_Rpandemic_try_lockdown", (DL_FUNC) &_Rpandemic_try_lockdown, 5},
     {NULL, NULL, 0}
 };
 
