@@ -3,10 +3,10 @@
 using namespace Rcpp;
 
 
-void new_day(Community *pop, unsigned long* num_infected, unsigned long* num_died, int date) {
+void new_day(Community *pop, unsigned long* num_infected, unsigned long* total_infected, unsigned long* num_died, int date) {
   long new_infections = 0;
 
-  pop->mingle(date);
+  (*total_infected) += pop->mingle(date);
   pop->update_health(date);
 
   *num_infected = pop->get_num_infected();
@@ -49,17 +49,18 @@ List test_params(int days, unsigned long pop_size, int sociability, double resis
   unsigned long num_infected = 1; // we know one person is infected cause we forced it
   unsigned long num_died = 0;
 
+  unsigned long total_infected = 0;
+
 
   IntegerVector cumu_infected(days);
   IntegerVector cumu_died(days);
 
   for (int d=0; d < days; ++d) {
-    new_day(population, &num_infected, &num_died, d);
+    new_day(population, &num_infected, &total_infected, &num_died, d);
     cumu_infected(d) = (int)num_infected;
     cumu_died(d) = (int) num_died;
   }
 
-  int total_infected = (int)population->get_num_infected(); //intentionally use a different source to check for agreement
   int total_dead = (int)population->get_num_died();
 
   return List::create(
@@ -84,12 +85,12 @@ List try_lockdown(int days, List popParams, List virusParams, unsigned long sens
   for (unsigned long p=0; p < (unsigned long)popParams["pop_size"]; ++p)
     population->add_person((double)popParams["compliance"], (double)popParams["resistance"]);
 
-  double contagiousness = (double)virusParams["contagiousness"];
-  double mortality_rate = (double)virusParams["mortality_rate"];
+  double contagiousness = virusParams["contagiousness"];
+  double mortality_rate = virusParams["mortality_rate"];
 
-  int incubation_period = (int)virusParams["incubation_period"];
-  int disease_length = (int)virusParams["disease_length"];
-  int latent_period = (int)virusParams["latent_period"];
+  int incubation_period = virusParams["incubation_period"];
+  int disease_length = virusParams["disease_length"];
+  int latent_period = virusParams["latent_period"];
 
 
 
@@ -109,12 +110,14 @@ List try_lockdown(int days, List popParams, List virusParams, unsigned long sens
   unsigned long num_infected = 1; // we know one person is infected cause we forced it
   unsigned long num_died = 0;
 
+  unsigned long total_infected = 0;
+
 
   IntegerVector cumu_infected(days);
   IntegerVector cumu_died(days);
 
   for (int d=0; d < days; ++d) {
-    new_day(population, &num_infected, &num_died, d);
+    new_day(population, &num_infected, &total_infected, &num_died, d);
     cumu_infected(d) = (int)num_infected;
     cumu_died(d) = (int) num_died;
     if (num_infected >= sensitivity & population->get_sociability() == sociability) {
@@ -129,7 +132,6 @@ List try_lockdown(int days, List popParams, List virusParams, unsigned long sens
 
   }
 
-  int total_infected = (int)population->get_num_infected(); //intentionally use a different source to check for agreement
   int total_dead = (int)population->get_num_died();
 
   return List::create(

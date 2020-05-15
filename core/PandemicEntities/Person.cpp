@@ -60,20 +60,20 @@ bool Person::survival_update(int date) {
     bool survived = true;
     if (infected) {
         
-        int days_elapsed  ;      
-//        int incubation_period = infection->get_incubation_period();
-        if ((days_elapsed = date - infection_date) < infection->get_disease_length()) {
-            sick = true;
-            if (infection->kill(resistance)) {
-                alive = false;
-                survived = false;
-            }
-                
-        } else {
+        int days_elapsed = date - infection_date ;      
+        int incubation_period = infection->get_incubation_period();
+        int total_length = infection->get_disease_length() + incubation_period;
+        if (days_elapsed >= total_length) {
             sick = false;
             infected = false;
         }
-        
+        else if (days_elapsed > incubation_period) {
+            sick = true;
+            if (infection->attempt_kill(resistance)) {
+                alive = false;
+                survived = false;
+            }
+        }        
         return survived;
         
     }

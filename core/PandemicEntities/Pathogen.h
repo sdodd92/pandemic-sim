@@ -28,16 +28,16 @@ public:
     Pathogen(const Pathogen& orig);
     virtual ~Pathogen();
     
-    bool kill(double host_resistance);
+    bool attempt_kill(double host_resistance);
     bool kill() {return true;}
     
     double get_contagiousness() {
         return contagiousness;
     }
     
-    double get_mortality_rate() {
-        return mortality_rate;
-    }
+    double get_mortality_rate() ;
+    
+    
     int get_disease_length() {
         return disease_length;
     }  
@@ -53,7 +53,7 @@ public:
     
     
 private:
-    double contagiousness, mortality_rate;
+    double contagiousness, daily_mortality_rate;
     
     int disease_length, incubation_period, latent_period;
     

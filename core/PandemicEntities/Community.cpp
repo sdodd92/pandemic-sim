@@ -46,7 +46,7 @@ unsigned long Community::get_num_infected() {
     unsigned long num_infected = 0;
     
     for (Person *person : population) 
-        if (person->is_infected())
+        if (person->is_alive() & person->is_infected())
             num_infected++;
     
     return num_infected;
@@ -129,9 +129,7 @@ long Community::mingle(int date) {
 unsigned long Community::update_health(int date) {
     unsigned long new_deaths = 0;
     
-    Person *person;
-    for (unsigned long i=0;i < pop_size; ++i) {
-        person = population[i];
+    for (Person *person : population) {
         if (person->is_alive())
             if (!person->survival_update(date))
                 new_deaths++;

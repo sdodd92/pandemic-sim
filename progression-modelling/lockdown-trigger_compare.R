@@ -7,21 +7,21 @@ library(ggplot2)
 
 registerDoParallel(3)
 
-pop.size <- 1e5
+pop.size <- 1e6
 
 population.params <- list(
   sociability = 20,
   pop_size = pop.size,
   compliance = 0.8,
-  resistance = 0
+  resistance = .1
 )
 
 virus.params <- list(
-  contagiousness = 0.05,
-  mortality_rate = 0.2,
-  incubation_period = 3,
+  contagiousness = 0.02,
+  mortality_rate = 0.05,
+  incubation_period = 5,
   disease_length = 14,
-  latent_period = 1
+  latent_period = 2
 )
 
 days <- 90
@@ -46,6 +46,7 @@ lockdown_results <- foreach(
   
   run_outcome <- result$epidemic_ts
   run_outcome$lockdown_trigger <- trigger
+  run_outcomes$final_infections <- result$total_infected
   
   return(run_outcome)
   
@@ -68,3 +69,6 @@ ggplot(lockdown_results, aes(x=day, y=cumu_death, color=as.factor(lockdown_trigg
   scale_y_continuous() +
   scale_color_viridis(discrete = TRUE) +
   geom_line()
+
+ggplot(lockdown_results, aes(x=as.factor(lockdown_trigger), y=final_infections)) +
+  stat_summary(fun.y = "max", geom = "bar")
