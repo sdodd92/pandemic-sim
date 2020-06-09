@@ -69,7 +69,7 @@ bool Person::survival_update(int date) {
         }
         else if (days_elapsed > incubation_period) {
             sick = true;
-            if (infection->attempt_kill(resistance)) {
+            if (days_elapsed > infection->get_kill_window()) {
                 alive = false;
                 survived = false;
             }

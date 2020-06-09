@@ -35,8 +35,13 @@ public:
         return contagiousness;
     }
     
-    double get_mortality_rate() ;
+    double get_mortality_rate() {
+        return mortality_rate;
+    };
     
+    int get_kill_window() {
+        return kill_window;
+    }
     
     int get_disease_length() {
         return disease_length;
@@ -53,11 +58,11 @@ public:
     
     
 private:
-    double contagiousness, daily_mortality_rate;
+    double contagiousness, mortality_rate;
     
-    int disease_length, incubation_period, latent_period;
+    int disease_length, incubation_period, latent_period, kill_window;
     
-    
+    void compute_kill_window();
 
     std::mt19937 generator;
     
