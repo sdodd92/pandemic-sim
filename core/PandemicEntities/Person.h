@@ -27,10 +27,6 @@ public:
         return infected;
     }
     
-    void set_resistance(double new_resistance) {resistance = new_resistance;};
-    
-    void set_compliance(double new_compliance) {compliance = new_compliance;};
-    
     
     unsigned long get_uid();
         
@@ -47,7 +43,7 @@ private:
     
     static void increment_uid();
     
-    Pathogen* infection;
+    Pathogen *infection;
     
     bool
             infected=false,
