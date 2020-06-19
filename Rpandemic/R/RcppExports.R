@@ -9,3 +9,11 @@ try_lockdown <- function(days, popParams, virusParams, sensitivity, aggressivene
     .Call('_Rpandemic_try_lockdown', PACKAGE = 'Rpandemic', days, popParams, virusParams, sensitivity, aggressiveness)
 }
 
+generate_world <- function(popParams, virusParams) {
+    .Call('_Rpandemic_generate_world', PACKAGE = 'Rpandemic', popParams, virusParams)
+}
+
+increment_days <- function(start_date, end_date, population) {
+    .Call('_Rpandemic_increment_days', PACKAGE = 'Rpandemic', start_date, end_date, population)
+}
+

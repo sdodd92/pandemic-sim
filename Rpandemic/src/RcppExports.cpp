@@ -35,10 +35,37 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// generate_world
+List generate_world(List popParams, List virusParams);
+RcppExport SEXP _Rpandemic_generate_world(SEXP popParamsSEXP, SEXP virusParamsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type popParams(popParamsSEXP);
+    Rcpp::traits::input_parameter< List >::type virusParams(virusParamsSEXP);
+    rcpp_result_gen = Rcpp::wrap(generate_world(popParams, virusParams));
+    return rcpp_result_gen;
+END_RCPP
+}
+// increment_days
+List increment_days(int start_date, int end_date, SEXP population);
+RcppExport SEXP _Rpandemic_increment_days(SEXP start_dateSEXP, SEXP end_dateSEXP, SEXP populationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type start_date(start_dateSEXP);
+    Rcpp::traits::input_parameter< int >::type end_date(end_dateSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type population(populationSEXP);
+    rcpp_result_gen = Rcpp::wrap(increment_days(start_date, end_date, population));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_Rpandemic_test_params", (DL_FUNC) &_Rpandemic_test_params, 5},
     {"_Rpandemic_try_lockdown", (DL_FUNC) &_Rpandemic_try_lockdown, 5},
+    {"_Rpandemic_generate_world", (DL_FUNC) &_Rpandemic_generate_world, 2},
+    {"_Rpandemic_increment_days", (DL_FUNC) &_Rpandemic_increment_days, 3},
     {NULL, NULL, 0}
 };
 
