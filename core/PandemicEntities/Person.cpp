@@ -19,6 +19,7 @@ Person::Person() {
     resistance = 0.5;
     compliance = 0.5;
     
+    uid = uid_counter;
     increment_uid();
 }
 
@@ -83,6 +84,7 @@ bool Person::survival_update(int date) {
 
 Pathogen* Person::pass_infection() {
     
+    // currently passes a POINTER to the pathogen (no mutation)
     Pathogen *new_infection = infection;
     
     // put more complex code here...?

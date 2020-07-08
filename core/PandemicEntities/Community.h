@@ -45,7 +45,7 @@ public:
     void reduce_sociability(double reduction_factor);
     
 //    virtual ~Community();
-private:
+protected:
     long pop_size;
     vector<Person*> population;
     
