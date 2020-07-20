@@ -17,3 +17,7 @@ increment_days <- function(start_date, end_date, population) {
     .Call('_Rpandemic_increment_days', PACKAGE = 'Rpandemic', start_date, end_date, population)
 }
 
+change_lockdown <- function(population, new_sociability) {
+    .Call('_Rpandemic_change_lockdown', PACKAGE = 'Rpandemic', population, new_sociability)
+}
+

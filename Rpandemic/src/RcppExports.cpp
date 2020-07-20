@@ -60,12 +60,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// change_lockdown
+SEXP change_lockdown(SEXP population, int new_sociability);
+RcppExport SEXP _Rpandemic_change_lockdown(SEXP populationSEXP, SEXP new_sociabilitySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type population(populationSEXP);
+    Rcpp::traits::input_parameter< int >::type new_sociability(new_sociabilitySEXP);
+    rcpp_result_gen = Rcpp::wrap(change_lockdown(population, new_sociability));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_Rpandemic_test_params", (DL_FUNC) &_Rpandemic_test_params, 5},
     {"_Rpandemic_try_lockdown", (DL_FUNC) &_Rpandemic_try_lockdown, 5},
     {"_Rpandemic_generate_world", (DL_FUNC) &_Rpandemic_generate_world, 2},
     {"_Rpandemic_increment_days", (DL_FUNC) &_Rpandemic_increment_days, 3},
+    {"_Rpandemic_change_lockdown", (DL_FUNC) &_Rpandemic_change_lockdown, 2},
     {NULL, NULL, 0}
 };
 

@@ -77,6 +77,7 @@ List increment_days(int start_date, int end_date, SEXP population) {
 
       newly_infected(d) = pop->mingle(current_date);
       current_infected(d) = pop->get_num_infected();
+      pop->update_health(current_date);
       number_died(d) = pop->get_num_died();
 
       ++current_date;
@@ -90,6 +91,19 @@ List increment_days(int start_date, int end_date, SEXP population) {
       Named("n_deaths") = number_died
     );
 
+
+}
+
+// [[Rcpp::export]]
+SEXP change_lockdown(SEXP population, int new_sociability) {
+
+  Community* pop;
+
+  unpack_ptr<Community>(population, &pop);
+
+  pop->change_sociability(new_sociability);
+
+  return population;
 
 }
 

@@ -68,6 +68,27 @@ lockdownSim <- function(
 }
 
 #' @export
+plot.smartSim <- function(sim, what = "total_infected", date.origin = NULL) {
+
+  X <- sim$date
+  if (!is.null(date.origin)) {
+    X <- as.Date(X, origin = date.origin)
+  }
+
+  if (what == "total_infected") {
+    Y<- sim$number_infected
+  } else if (what == "new_infections") {
+    Y <- sim$number_infections
+  } else if (what == "deaths") {
+    Y <- sim$number_deaths
+  }
+
+  plot(X, Y, type = 'n')
+  lines(X, Y)
+
+}
+
+#' @export
 smartSim <- function(population.params, virus.params) {
 
   world <- generate_world(popParams = population.params, virusParams = virus.params)
@@ -76,10 +97,12 @@ smartSim <- function(population.params, virus.params) {
     number_infections = c(),
     number_deaths = c(),
     date = c(),
-    current_date = 0
+    current_date = 0,
+    current_sociability = population.params$sociability,
+    base.sociability = population.params$sociability
   )
 
-  return(structure(c(world, extra_params), class = c("smartSim", "lockdownSim")) )
+  return(structure(c(world, extra_params), class = "smartSim") )
 
 }
 
@@ -104,11 +127,24 @@ runSim <- function(sim, days = NULL, start_date = NULL, end_date = NULL) {
   sim$number_infected <- c(sim$number_infected, new_sim$n_infected)
   sim$number_infections <- c(sim$number_infections, new_sim$n_infections)
   sim$number_deaths <- c(sim$number_deaths, new_sim$n_deaths)
-  sim$date <- c(sim$date, start_date:end_date)
+  sim$date <- c(sim$date, (start_date + 1):end_date)
+  sim$current_date <- end_date
 
   return(sim)
 
+}
 
+#' @export
+update <- function(sim, lockdown_factor = NULL, new.sociability = NULL) {
+
+  if (!is.null(lockdown_factor)) {
+    new.sociability <- as.integer(sim$base.sociability * lockdown_factor)
+  }
+
+  sim$raw_population <- change_lockdown(sim$raw_population, new.sociability)
+  sim$current_sociability <- new.sociability
+
+  return(sim)
 
 }
 
