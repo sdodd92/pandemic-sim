@@ -1,0 +1,40 @@
+#!/bin/bash
+
+
+# set out some default parameters
+SOCIABILITY=20
+COMPLIANCE=1
+RESISTANCE=0.1
+CONTAGIOUSNESS=0.02
+MORTALITY=0.05
+DISEASE_LENGTH=14
+INCUBATION_PERIOD=5
+LATENT_PERIOD=3
+POP_SIZE=1000  # stupidly small pop-size as a default
+
+# specify which command to run as first argument
+CALL=bin/$1
+
+shift 1
+
+# allow cli override of defaults
+OPTIND=1
+while getopts ":s:c:r:C:M:I:D:L:N:" opt; do
+ case $opt in
+  s) SOCIABILITY=$OPTARG;;
+  c) COMPLIANCE=$OPTARG;;
+  r) RESISTANCE=$OPTARG;;
+  C) CONTAGIOUSNESS=$OPTARG;;
+  M) MORTALITY=$OPTARG;;
+  D) DISEASE_LENGTH=$OPTARG;;
+  I) INCUBATION_PERIOD=$OPTARG;;
+  L) LATENT_PERIOD=$OPTARG;;
+  N) POP_SIZE=$OPTARG;;
+ esac
+done
+
+# adjust the arg array to cover any additional arguments
+shift $((OPTIND-2))
+
+
+$CALL -s $SOCIABILITY -c $COMPLIANCE -r $RESISTANCE -C $CONTAGIOUSNESS -M $MORTALITY -D $DISEASE_LENGTH -I $INCUBATION_PERIOD -L $LATENT_PERIOD -N $POP_SIZE $@
