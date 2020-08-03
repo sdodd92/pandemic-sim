@@ -93,34 +93,42 @@ long Community::mingle(int date) {
         
         if (person_1->is_alive()) { //don't iterate on dead ppl (efficiency...)
             
-            int sociability = pop_size;
+            int sociability;
+            if (base_sociability < 0) {
             // negative sociability factor means all possible interactions occur
-            if (base_sociability >= 0) 
+                for (long j=0; j < pop_size; ++j) 
+                    if (j != i) {
+                        person_2 = population[j];
+                        new_infections += pairwise_interaction(person_1, person_2, date);
+                    };
+                        
+            } else {
+            // otherwise draw number of interactions from poisson mean
                 sociability = base_sociability;
 
             std::poisson_distribution<int> draw_interaction_count(sociability);
             int interactions = draw_interaction_count(generator);
 
-            //deterministic interaction count for testing
-    //        int interactions = sociabiltiy; 
-            for (int ii=0; ii < interactions; ii++) {
+            for (int ii=0; ii < interactions; ii++) { 
+                // select n interactees based on the count drawn above
                 std::uniform_int_distribution<long> draw_interactee(0, pop_size - 1);
                 
                 long j = draw_interactee(generator);
                 person_2 = population[j];
                 
                 while (i == j | !person_2->is_alive()){
+                    // re-draw if the interactee is the same
+                    // or if the interactee is dead
                     j = draw_interactee(generator);
                     person_2 = population[j];
                 }
 
 
                 new_infections += pairwise_interaction(person_1, person_2, date);
-            }
+            } // for (int ii=0; ii < interactions; ii++)
             
-//    new_infections++;
-        }
-    }
+        } // if (base_sociability < 0)
+    } // long Community::mingle(int date)
     
     
     return new_infections;
