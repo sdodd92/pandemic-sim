@@ -127,7 +127,8 @@ long Community::mingle(int date) {
                 new_infections += pairwise_interaction(person_1, person_2, date);
             } // for (int ii=0; ii < interactions; ii++)
             
-        } // if (base_sociability < 0)
+           } // if (base_sociability < 0)
+        } // if (person_1->is_alive())
     } // long Community::mingle(int date)
     
     
