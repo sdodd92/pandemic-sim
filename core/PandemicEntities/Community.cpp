@@ -87,7 +87,11 @@ long Community::mingle(int date) {
     
     Person *person_1, *person_2;
     
-    for (long i=0;pop_size > 1 & i < pop_size; i++) {
+    #ifdef PARALLEL_MINGLE
+    #pragma omp parallel for private(person_1, person_2)
+    #endif
+	// TODO debug systematic differences from parallelization
+    for (long i=0;i < pop_size; i++) {
         
         person_1 = population[i];
         
