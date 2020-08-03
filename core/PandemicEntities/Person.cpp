@@ -75,10 +75,9 @@ bool Person::survival_update(int date) {
                 survived = false;
             }
         }        
-        return survived;
-        
     }
     
+        return survived;
 }
 
 
