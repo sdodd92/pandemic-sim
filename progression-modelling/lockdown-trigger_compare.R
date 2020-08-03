@@ -25,7 +25,7 @@ virus.params <- list(
 )
 
 days <- 90
-lockdown.aggressiveness <- 0.15
+lockdown.aggressiveness <- 0.3
 
 triggers <- pop.size * c(.01, .05, .1, .2, 1)
 
@@ -46,29 +46,29 @@ lockdown_results <- foreach(
   
   run_outcome <- result$epidemic_ts
   run_outcome$lockdown_trigger <- trigger
-  run_outcomes$final_infections <- result$total_infected
+  run_outcome$final_infections <- result$final_infected
   
   return(run_outcome)
   
   
 }
 
-ggplot(lockdown_results, aes(x=day, y=infected, color=as.factor(lockdown_trigger))) +
+ggplot(lockdown_results, aes(x=day, y=infected, color=as.factor(lockdown_trigger / pop.size))) +
   scale_y_continuous(labels = comma) +
   scale_color_viridis(discrete = TRUE) +
   geom_line()
 
 lockdown_results$infected.pct <- lockdown_results$infected / pop.size
 
-ggplot(lockdown_results, aes(x=day, y=infected.pct, color=as.factor(lockdown_trigger))) +
+ggplot(lockdown_results, aes(x=day, y=infected.pct, color=as.factor(lockdown_trigger / pop.size))) +
   scale_y_continuous(labels = percent) +
   scale_color_viridis(discrete = TRUE) +
   geom_line()
 
-ggplot(lockdown_results, aes(x=day, y=cumu_death, color=as.factor(lockdown_trigger))) +
-  scale_y_continuous() +
+ggplot(lockdown_results, aes(x=day, y=cumu_death, color=as.factor(lockdown_trigger / pop.size))) +
+  scale_y_continuous(labels = comma) +
   scale_color_viridis(discrete = TRUE) +
   geom_line()
 
-ggplot(lockdown_results, aes(x=as.factor(lockdown_trigger), y=final_infections)) +
+ggplot(lockdown_results, aes(x=as.factor(lockdown_trigger / pop.size), y=final_infections)) +
   stat_summary(fun.y = "max", geom = "bar")
