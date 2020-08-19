@@ -6,7 +6,50 @@
  */
 
 #include "Community.h"
+#include <omp.h>
+#include <random>
+#include <stdlib.h>
 
+#define init_random() generator(std::random_device{}())
+
+#if defined(PARALLEL_MINGLE)
+Community::Community() : init_random() {
+    pop_size = 0;
+    base_sociability = 0;
+	pop_lock = (omp_lock_t*)malloc(sizeof(omp_lock_t));
+	omp_init_lock(pop_lock);
+}
+
+Community::Community(int sociability) : init_random() {
+    pop_size = 0;
+    base_sociability = sociability;
+
+	pop_lock = (omp_lock_t*)malloc(sizeof(omp_lock_t));
+	omp_init_lock(pop_lock);
+}
+
+void Community::add_person(Person *person) {
+    
+	if (pop_size > 0) { // the first lock will have already been created in the constructor
+		pop_lock = (omp_lock_t*)realloc(pop_lock, (pop_size + 1)*sizeof(omp_lock_t));
+		omp_init_lock(pop_lock + pop_size); // hacky use of the un-incremented pop_size counter
+	}
+    pop_size++;
+    population.push_back(person);
+	
+    
+}
+
+Community::~Community() {
+	// un-initialize each lock which has been created
+	for (int i=0; i < pop_size; ++i)
+		omp_destroy_lock(pop_lock + i);
+	
+	free(pop_lock);
+}
+
+
+#else 
 Community::Community() {
     pop_size = 0;
     base_sociability = 0;
@@ -17,13 +60,13 @@ Community::Community(int sociability) {
     base_sociability = sociability;
 }
 
-
 void Community::add_person(Person *person) {
     
     pop_size++;
     population.push_back(person);
     
 }
+#endif
 
 void Community::add_person(double compliance, double resistance) {
     Person *new_person = new Person(compliance, resistance);
@@ -88,7 +131,7 @@ long Community::mingle(int date) {
     Person *person_1, *person_2;
     
     #ifdef PARALLEL_MINGLE
-    #pragma omp parallel for private(person_1, person_2)
+    #pragma omp parallel for reduction(+: new_infections) private(person_1, person_2)
     #endif
 	// TODO debug systematic differences from parallelization
     for (long i=0;i < pop_size; i++) {
@@ -127,8 +170,15 @@ long Community::mingle(int date) {
                     person_2 = population[j];
                 }
 
-
+   				#ifdef PARALLEL_MINGLE
+				omp_set_lock(pop_lock + i);
+				omp_set_lock(pop_lock + j);
+				#endif
                 new_infections += pairwise_interaction(person_1, person_2, date);
+				#ifdef PARALLEL_MINGLE
+				omp_unset_lock(pop_lock + i);
+				omp_unset_lock(pop_lock + j);
+				#endif
             } // for (int ii=0; ii < interactions; ii++)
             
            } // if (base_sociability < 0)
