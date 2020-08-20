@@ -13,6 +13,7 @@
 #include <random>
 #include <iostream>
 #include <string>
+#include <omp.h>
 
 using namespace std;
 
@@ -23,10 +24,15 @@ public:
     
     Community(int sociability);
     
-    void add_person(Person *person);
-    void add_person(double compliance, double resistance);
+    Community(int sociability, long pop_size, double avg_compliance, double avg_resistance);
+
+    bool add_person(Person *person);
+    bool add_person(double compliance, double resistance);
     void remove_person(unsigned long id);
     
+    long get_pop_size() {return pop_size;};
+    Person* get_person(long index) {return population[index];};
+
     long mingle(int date);
     
     unsigned long initiate_infection(Pathogen *pathogen, int date, unsigned long member);
@@ -46,14 +52,18 @@ public:
     
 //    virtual ~Community();
 protected:
+
+	#ifdef PARALLEL_MINGLE
+	omp_lock_t* pop_lock;
+	#endif
+	
     long pop_size;
     vector<Person*> population;
     
     int base_sociability;
 
     
-    std::random_device r;
-    std::mt19937 generator{r()};
+    std::mt19937 generator;
     
     long pairwise_interaction(Person *person_1, Person *person_2, int date);
 };

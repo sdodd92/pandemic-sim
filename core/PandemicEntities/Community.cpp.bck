@@ -6,47 +6,30 @@
  */
 
 #include "Community.h"
+#include <omp.h>
+#include <stdlib.h>
 
-#define init_random() generator(std::random_device{}())
-
-Community::Community() : init_random() {
+Community::Community() {
     pop_size = 0;
     base_sociability = 0;
 }
 
-Community::Community(int sociability) : init_random() {
+Community::Community(int sociability) {
     pop_size = 0;
     base_sociability = sociability;
 }
 
-Community::Community(int sociability, long pop_size, double avg_compliance, double avg_resistance) : init_random() {
-	this->pop_size = pop_size;
-	base_sociability = sociability;
 
-	for (int i=0; i<pop_size; ++i)
-		add_person(avg_compliance, avg_resistance); //todo draw compliance/resistance from distribution
-
-}
-
-
-bool Community::add_person(Person *person) {
+void Community::add_person(Person *person) {
     
-    for (int i=0; i < pop_size; ++i)
-    	// reject the addition of this person is already in the population
-    	if (population[i]->get_uid() == person->get_uid())
-    		return false;
     pop_size++;
     population.push_back(person);
     
-    return true;
-
 }
 
-bool Community::add_person(double compliance, double resistance) {
+void Community::add_person(double compliance, double resistance) {
     Person *new_person = new Person(compliance, resistance);
-    bool success = add_person(new_person);
-
-    return success;
+    this->add_person(new_person);
 }
 
 
@@ -106,8 +89,15 @@ long Community::mingle(int date) {
     
     Person *person_1, *person_2;
     
-    for (long i=0;pop_size > 1 & i < pop_size; i++) {
-        
+    #ifdef PARALLEL_MINGLE
+	omp_lock_t* pop_lock = (omp_lock_t*)malloc(pop_size * sizeof(omp_lock_t));
+	for (int i=0; i < pop_size; ++i)
+		omp_init_lock(pop_lock + i);
+    #pragma omp parallel for reduction(+: new_infections) private(person_1, person_2)
+    #endif
+	// TODO debug systematic differences from parallelization
+    for (long i=0;i < pop_size; i++) {
+
         person_1 = population[i];
         
         if (person_1->is_alive()) { //don't iterate on dead ppl (efficiency...)
@@ -142,17 +132,26 @@ long Community::mingle(int date) {
                     person_2 = population[j];
                 }
 
-
-                // interaction should be symmetrical (each person has equal chance of infecting the other)
+				#ifdef PARALLEL_MINGLE
+				omp_set_lock(pop_lock + i);
+				omp_set_lock(pop_lock + j);
+				#endif
                 new_infections += pairwise_interaction(person_1, person_2, date);
-                new_infections += pairwise_interaction(person_2, person_1, date);
+				#ifdef PARALLEL_MINGLE
+				omp_unset_lock(pop_lock + i);
+				omp_unset_lock(pop_lock + j);
+				#endif
             } // for (int ii=0; ii < interactions; ii++)
             
            } // if (base_sociability < 0)
         } // if (person_1->is_alive())
     } // long Community::mingle(int date)
     
-    
+	#ifdef PARALLEL_MINGLE
+	for (int i=0; i < pop_size; ++i)
+		omp_destroy_lock(pop_lock + i);
+    free(pop_lock);
+	#endif
     return new_infections;
 }
 
