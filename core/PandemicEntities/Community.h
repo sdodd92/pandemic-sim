@@ -9,8 +9,8 @@
 #define	COMMUNITY_H
 
 #include "Person.h"
-#include <vector>
 #include <random>
+#include <stdlib.h>
 #include <iostream>
 #include <string>
 #include <omp.h>
@@ -50,15 +50,11 @@ public:
     
     void reduce_sociability(double reduction_factor);
     
-//    virtual ~Community();
+    virtual ~Community() {free(population);}; // don't delete members as they may be shared
 protected:
-
-	#ifdef PARALLEL_MINGLE
-	omp_lock_t* pop_lock;
-	#endif
 	
     long pop_size;
-    vector<Person*> population;
+    Person** population;
     
     int base_sociability;
 
