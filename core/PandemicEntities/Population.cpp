@@ -24,10 +24,7 @@ Population::Population(long pop_size, double clumpiness, double avg_compliance, 
 	subcommunities = (Community*)malloc(sizeof(Community));
 	n_subcommunities = 1;
 
-
-
-
-} //Population::Population(long pop_size, double clumpiness, double avg_compliance, double avg_resistance)
+}
 
 
 void Population::define_structure(double clumpiness) {
