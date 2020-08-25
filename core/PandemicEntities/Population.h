@@ -9,6 +9,7 @@
 #define CORE_PANDEMICENTITIES_POPULATION_H_
 
 #include "Community.h"
+#include <vector>
 
 class Population: public Community {
 public:
@@ -16,19 +17,20 @@ public:
 
 	Population(long pop_size, double avg_compliance, double avg_resistance);
 
-	void define_structure(double clumpiness);
+	void define_structure(long avg_community_size);
 
 	unsigned long subpop_num_infected(long i) {return subcommunities[i].get_num_infected();};
 	unsigned long* num_infected_breakdown();
 
+	long* get_pop_sizes();
+	long get_n_subcommunities() {return n_subcommunities;};
+
 	long mingle(int date);
 
 
-	virtual ~Population() {free(subcommunities);};
-
 
 protected:
-	Community* subcommunities;
+	std::vector<Community> subcommunities;
 	long n_subcommunities;
 };
 

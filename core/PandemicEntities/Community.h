@@ -26,8 +26,9 @@ public:
     
     Community(int sociability, long pop_size, double avg_compliance, double avg_resistance);
 
-    bool add_person(Person *person);
-    bool add_person(double compliance, double resistance);
+    void add_person(Person *person);
+    void add_person(double compliance, double resistance);
+    bool safely_add_person(Person *person);
     void remove_person(unsigned long id);
     
     long get_pop_size() {return pop_size;};

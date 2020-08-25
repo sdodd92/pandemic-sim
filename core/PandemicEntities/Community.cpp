@@ -30,25 +30,27 @@ Community::Community(int sociability, long pop_size, double avg_compliance, doub
 
 
 
-bool Community::add_person(Person *person) {
+void Community::add_person(Person *person) {
     
+    population.push_back(person);
+    pop_size++;
+
+}
+
+bool Community::safely_add_person(Person* person) {
     for (int i=0; i < pop_size; ++i)
     	// reject the addition of this person is already in the population
     	if (population[i]->get_uid() == person->get_uid())
     		return false;
-    population.push_back(person);
-    pop_size++;
     
-
+    add_person(person);
     return true;
-
 }
 
-bool Community::add_person(double compliance, double resistance) {
+void Community::add_person(double compliance, double resistance) {
     Person *new_person = new Person(compliance, resistance);
-    bool success = add_person(new_person);
+    add_person(new_person);
 
-    return success;
 }
 
 
@@ -199,5 +201,12 @@ void Community::reduce_sociability(double reduction_factor) {
         base_sociability = pop_size * reduction_factor;
     
     
+}
+
+void Community::remove_person(unsigned long id) {
+
+	population.erase(population.begin() + id);
+	pop_size--;
+
 }
 

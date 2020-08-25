@@ -13,26 +13,22 @@
 
 Population::Population() : Community() {
 	// initialize a single starting sub-community
-	subcommunities = (Community*)malloc(sizeof(Community));
 	n_subcommunities = 1;
 }
 
-Population::Population(long pop_size, double clumpiness, double avg_compliance, double avg_resistance)
+Population::Population(long pop_size, double avg_compliance, double avg_resistance)
  : Community(0, pop_size, avg_compliance, avg_resistance) {
 
 	// initialize a single starting sub-community
-	subcommunities = (Community*)malloc(sizeof(Community));
-	n_subcommunities = 1;
+	n_subcommunities = 0;
 
 }
 
 
-void Population::define_structure(double clumpiness) {
+void Population::define_structure(long avg_community_size) {
 
 	std::uniform_int_distribution<long> draw_member_index(0, pop_size - 1);
 	std::unordered_set<long> clumped_ids;
-
-	long avg_community_size = (long)(pop_size * clumpiness);
 
 	// initialize count of un-allocated individuals
 	long un_clumped = pop_size;
@@ -42,16 +38,12 @@ void Population::define_structure(double clumpiness) {
 			std::poisson_distribution<long> draw_community_size(avg_community_size);
 			long community_size = draw_community_size(generator);
 
-			// expand the subcommunity array after filling the initial member
-			if (n_subcommunities > 1)
-				subcommunities = (Community*)realloc(subcommunities, (n_subcommunities + 1) * sizeof(Community));
-
 			// initialize the new sub-community and increment the running counter
-			subcommunities[n_subcommunities] = Community(-1);  // negative sociability means all possible interactions
+			subcommunities.push_back(Community(-1)); // negative sociability means all possible interactions
 			n_subcommunities++;
 
 			// get a pointer to the new community (readability)
-			Community* new_community = &(subcommunities[n_subcommunities]);
+			Community* new_community = &(subcommunities[n_subcommunities - 1]);
 
 			for (long n=0; n < community_size; ++n) {
 
@@ -99,3 +91,14 @@ unsigned long* Population::num_infected_breakdown() {
 
 }
 
+
+long* Population::get_pop_sizes() {
+
+	long* output = (long*)malloc(n_subcommunities * sizeof(long));
+	for (int i=0; i < n_subcommunities; ++i) {
+		output[i] = subcommunities[i].get_pop_size();
+	}
+
+	return output;
+
+}
