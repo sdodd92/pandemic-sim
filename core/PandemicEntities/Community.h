@@ -10,7 +10,7 @@
 
 #include "Person.h"
 #include <random>
-#include <stdlib.h>
+#include <vector>
 #include <iostream>
 #include <string>
 #include <omp.h>
@@ -50,11 +50,10 @@ public:
     
     void reduce_sociability(double reduction_factor);
     
-    virtual ~Community() {free(population);}; // don't delete members as they may be shared
 protected:
 	
     long pop_size;
-    Person** population;
+    std::vector<Person*> population;
     
     int base_sociability;
 

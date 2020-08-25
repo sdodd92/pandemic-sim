@@ -6,20 +6,17 @@
  */
 
 #include "Community.h"
-#include <stdlib.h>
 
 #define init_random() generator(std::random_device{}())
 
 Community::Community() : init_random() {
     pop_size = 0;
     base_sociability = 0;
-    population = (Person**)malloc(sizeof(Person*));
 }
 
 Community::Community(int sociability) : init_random() {
     pop_size = 0;
     base_sociability = sociability;
-    population = (Person**)malloc(sizeof(Person*));
 }
 
 Community::Community(int sociability, long pop_size, double avg_compliance, double avg_resistance) : init_random() {
@@ -39,12 +36,7 @@ bool Community::add_person(Person *person) {
     	// reject the addition of this person is already in the population
     	if (population[i]->get_uid() == person->get_uid())
     		return false;
-    if (pop_size == 0){
-    	population[0] = person;
-    } else {
-    	population = (Person**)realloc(population, (pop_size + 1)*sizeof(Person*));
-    	population[pop_size] = person;
-    }
+    population.push_back(person);
     pop_size++;
     
 
@@ -74,12 +66,9 @@ unsigned long Community::initiate_infection(Pathogen *pathogen, int date, unsign
 unsigned long Community::get_num_infected() {
     unsigned long num_infected = 0;
     
-    Person* person;
-    for (int i=0; i < pop_size; ++i) {
-    	person = population[i];
+    for (Person *person : population)
         if (person->is_alive() & person->is_infected())
             num_infected++;
-    }
     
     return num_infected;
 }
@@ -178,9 +167,7 @@ long Community::mingle(int date) {
 unsigned long Community::update_health(int date) {
     unsigned long new_deaths = 0;
     
-    Person* person;
-    for (int i=0; i < pop_size; ++i) {
-    	person = population[i];
+    for (Person *person : population) {
         if (person->is_alive())
             if (!person->survival_update(date))
                 new_deaths++;
@@ -195,12 +182,9 @@ unsigned long Community::update_health(int date) {
 unsigned long Community::get_num_died() {
     unsigned long num_died = 0;
 
-    Person* person;
-    for (int i=0; i < pop_size; ++i) {
-    	person = population[i];
+    for (Person *person : population)
         if (!person->is_alive())
             num_died++;
-    }
     
     return num_died;
 }
