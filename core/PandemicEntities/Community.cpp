@@ -123,8 +123,12 @@ long Community::mingle(int date) {
                     person_2 = population[j];
                 }
 
+                // todo put logging logic here
 
+                // interaction should be symmetrical (each person has equal chance of infecting the other)
                 new_infections += pairwise_interaction(person_1, person_2, date);
+                new_infections += pairwise_interaction(person_2, person_1, date);
+
             } // for (int ii=0; ii < interactions; ii++)
             
            } // if (base_sociability < 0)
