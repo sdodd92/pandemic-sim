@@ -62,6 +62,10 @@ protected:
     std::mt19937 generator;
     
     long pairwise_interaction(Person *person_1, Person *person_2, int date);
+
+    long mingle_all(int date);
+    long mingle_partial(int date);
+
 };
 
 #endif	/* COMMUNITY_H */

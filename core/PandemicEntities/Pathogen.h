@@ -11,7 +11,7 @@
 #include <random>
 #include <ctime>
 
-
+class Person; // forward-declaration for class Person
 
 class Pathogen {
 public:
@@ -26,11 +26,12 @@ public:
     );
     
     Pathogen(const Pathogen& orig);
-    virtual ~Pathogen();
     
     bool attempt_kill(double host_resistance);
     bool kill() {return true;}
     
+    bool infect(Person* new_host, int date_delta, int date);
+
     double get_contagiousness() {
         return contagiousness;
     }
