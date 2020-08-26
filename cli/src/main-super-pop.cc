@@ -77,9 +77,8 @@ int main(int argc, char** argv) {
     }
         
     //initialize world entities
-    Community population(sociability);
-    for (int p=0; p < pop_size; ++p) 
-		population.add_person(compliance, resistance);   
+    Population population(pop_size, compliance, resistance);
+	population.define_structure(sociability);
 		
 	 virus = new Pathogen(
 		   contagiousness,
@@ -103,7 +102,7 @@ int main(int argc, char** argv) {
 	 infected[0] = 1; // we know one person is infected since we forced it
 	 new_infections[0] = 1;
 	 
-	 int date = 1;  // TODO: decide if this is correct - are we losing info from day 0?
+	 int date = 0;  // TODO: decide if this is correct - are we losing info from day 0?
 	 while (date < n_iter) {
 	 	
 	 		  new_infections[date] = population.mingle(date);
