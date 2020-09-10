@@ -10,6 +10,7 @@
 
 #include "Person.h"
 #include <vector>
+#include <omp.h>
 #include <random>
 #include <iostream>
 #include <string>
@@ -50,6 +51,10 @@ protected:
     vector<Person*> population;
     
     int base_sociability;
+
+#ifdef PARALLEL_MINGLE
+    omp_lock_t* pop_lock;
+#endif
 
     
     std::random_device r;
