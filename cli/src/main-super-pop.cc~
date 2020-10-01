@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
         
     //initialize world entities
     Population population(pop_size, compliance, resistance);
-	population.random_structure(sociability);
+	population.assign_subpops(sociability);
 		
 	 virus = new Pathogen(
 		   contagiousness,

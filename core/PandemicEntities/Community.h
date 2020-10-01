@@ -12,6 +12,7 @@
 #include <random>
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 #include <string>
 #include <omp.h>
 
@@ -19,6 +20,10 @@ using namespace std;
 
 class Community {
 public:
+
+	typedef std::unordered_map<unsigned long, bool> LogEntry;
+	typedef std::unordered_map<int, LogEntry> InfectionLog;
+
     Community();
 //    Community(const Community& orig);
     
@@ -26,13 +31,13 @@ public:
     
     Community(int sociability, long pop_size, double avg_compliance, double avg_resistance);
 
-    void add_person(Person *person);
+    virtual void add_person(Person *person);
     void add_person(double compliance, double resistance);
     bool safely_add_person(Person *person);
-    void remove_person(unsigned long id);
+    virtual void remove_person(unsigned long id);
     
-    long get_pop_size() {return pop_size;};
-    Person* get_person(long index) {return population[index];};
+    long get_pop_size() const {return pop_size;};
+    Person* get_person(long index) const {return population[index];};
 
     long mingle(int date);
     
@@ -47,10 +52,14 @@ public:
     int get_sociability() {return base_sociability;};
     
     void change_sociability(int new_sociability) 
-    {base_sociability = new_sociability;} ;
+    	{base_sociability = new_sociability;} ;
     
     void reduce_sociability(double reduction_factor);
     
+    InfectionLog get_infection_log() {return infection_log;};
+    void update_infection_log(int date);
+
+
 protected:
 	
     long pop_size;
@@ -65,6 +74,9 @@ protected:
 
     long mingle_all(int date);
     long mingle_partial(int date);
+
+	InfectionLog infection_log;
+
 
 };
 

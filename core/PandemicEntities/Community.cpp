@@ -226,3 +226,12 @@ void Community::remove_person(unsigned long id) {
 
 }
 
+
+void Community::update_infection_log(int date) {
+
+	for (Person* person : population)
+		infection_log[date][person->get_uid()] = person->is_infected();
+
+}
+
+
