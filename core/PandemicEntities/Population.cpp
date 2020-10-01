@@ -137,18 +137,18 @@ Population::Network Population::get_person_network() {
 
 Population::Network Population::get_community_network() {
 	Network network;
-	unsigned long uid;
 
-	for (Person* person : population) {
+	unsigned long link_count;
 
-		uid = person->get_uid();
-		for (long i=0; i<n_subcommunities; ++i)
-			for (long j=(i + 1); j<n_subcommunities; ++j) {
-				if (subcommunities[i].population_contains(uid) & subcommunities[j].population_contains(uid))
-					network[i][j]++;
-			}
+	for (SubCommunity& subcommunity : subcommunities)
+		subcommunity.sort_uids();
 
-	}
+	for (long i=0; i<n_subcommunities; ++i)
+		for (long j=(i + 1); j<n_subcommunities; ++j) {
+			link_count = subcommunities[i].shared_weight(subcommunities[j]);
+			if (link_count > 0)
+				network[i][j] += link_count;
+		}
 
 	return network;
 }

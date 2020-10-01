@@ -10,7 +10,8 @@
 
 #include "Community.h"
 #include "Person.h"
-#include <unordered_set>
+#include <vector>
+#include <algorithm>
 
 
 class SubCommunity: public Community {
@@ -20,15 +21,12 @@ public:
 	void add_person(Person* person) override;
 	void remove_person(unsigned long id) override;
 
-	bool population_contains(unsigned long id) {
-		auto finder = pop_uids.find(id);
-		if (finder != pop_uids.end())
-			return false;
-		else return true;
-	};
+	void sort_uids() {std::sort(pop_uids.begin(), pop_uids.end());};
+
+	unsigned long shared_weight(const SubCommunity& other);
 
 protected:
-	std::unordered_set<unsigned long> pop_uids;
+	std::vector<unsigned long> pop_uids;
 };
 
 #endif /* CORE_PANDEMICENTITIES_SUBCOMMUNITY_H_ */
