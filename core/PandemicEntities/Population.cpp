@@ -65,36 +65,49 @@ void Population::random_structure(long avg_community_size) {
 } // Population::define_structure(long avg_community_size)
 
 
-void Population::define_structure(long avg_community_size, unsigned long num_communities) {
+void Population::define_structure(long avg_community_size, long num_communities) {
 
 	std::uniform_int_distribution<long> draw_member_index(0, pop_size - 1);
 	std::poisson_distribution<long> draw_community_size(avg_community_size);
 
+	#pragma omp parallel
+	{
 
-	for (int i=0; i < num_communities; ++i) {
+		std::vector<SubCommunity> tmp_subcommunities;
+		Community* new_community;
 
-		long community_size = draw_community_size(generator);
+		#pragma omp for nowait
+		for (int i=0; i < num_communities; ++i) {
 
-		// initialize the new sub-community and increment the running counter
-		subcommunities.push_back(SubCommunity()); // negative sociability means all possible interactions
-		n_subcommunities++;
+			long community_size = draw_community_size(generator);
 
-		// get a pointer to the new community (readability)
-		Community* new_community = &(subcommunities[n_subcommunities - 1]);
+			// initialize the new sub-community and increment the running counter
+			tmp_subcommunities.push_back(SubCommunity()); // negative sociability means all possible interactions
 
-		for (long n=0; n < community_size; ++n) {
+			// get a pointer to the new community (readability)
+			new_community = &tmp_subcommunities.back();
 
-			bool success = false;
-			long i;
-			while (!success) {
-				i = draw_member_index(generator);
-				success = Border::share(this, new_community, i);
-			} // while !success
+			for (long n=0; n < community_size; ++n) {
 
-		} // for (long n=0; n < community_size; ++n)
+				bool success = false;
+				long i;
+				while (!success) {
+					i = draw_member_index(generator);
+					success = Border::share(this, new_community, i);
+				} // while !success
+
+			} // for (long n=0; n < community_size; ++n)
 
 
-	} // for (int i=0; i < num_communities; ++i)
+		} // for (int i=0; i < num_communities; ++i)
+
+		#pragma omp critical
+		subcommunities.insert(subcommunities.end(), tmp_subcommunities.begin(), tmp_subcommunities.end());
+
+
+	} // #pragma omp parallel
+
+	n_subcommunities = num_communities;
 
 }
 
@@ -190,12 +203,22 @@ Population::Network Population::get_community_network() {
 Population::MembershipNode Population::get_community_memberships() {
 
 	MembershipNode memberships;
-	Community* subcommunity;
 
-	for (unsigned long i=0; i < n_subcommunities; ++i) {
-		subcommunity = &(subcommunities[i]);
-		for (unsigned long j=0; j < subcommunity->get_pop_size(); ++j)
-			memberships[i].push_back(subcommunity->get_person(j)->get_uid());
+	#pragma omp parallel
+	{
+		MembershipNode tmp_memberships;
+		Community* subcommunity;
+
+		#pragma omp for nowait
+		for (unsigned long i=0; i < n_subcommunities; ++i) {
+			subcommunity = &(subcommunities[i]);
+			for (unsigned long j=0; j < subcommunity->get_pop_size(); ++j)
+				tmp_memberships[i].push_back(subcommunity->get_person(j)->get_uid());
+		}
+
+		#pragma omp critical
+		memberships.insert(tmp_memberships.begin(), tmp_memberships.end());
+
 	}
 
 	return memberships;
