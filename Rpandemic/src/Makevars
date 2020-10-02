@@ -1,2 +1,3 @@
-PKG_LIBS = -L/home/sam/Documents/pandemic-sim/core -lpandemicentities
+PKG_LDFLAGS = /home/sam/modelling/dev/pandemic-sim/lib
+PKG_LIBS = -L$(PKG_LDFLAGS) -lpandemicentities -Wl,-rpath,$(PKG_LDFLAGS)
 PKG_CXXFLAGS = -std=c++11

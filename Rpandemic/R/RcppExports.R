@@ -21,3 +21,19 @@ change_lockdown <- function(population, new_sociability) {
     .Call('_Rpandemic_change_lockdown', PACKAGE = 'Rpandemic', population, new_sociability)
 }
 
+generate_population <- function(popParams, virusParams) {
+    .Call('_Rpandemic_generate_population', PACKAGE = 'Rpandemic', popParams, virusParams)
+}
+
+subpop_memberships <- function(population) {
+    .Call('_Rpandemic_subpop_memberships', PACKAGE = 'Rpandemic', population)
+}
+
+subpop_connections <- function(population) {
+    .Call('_Rpandemic_subpop_connections', PACKAGE = 'Rpandemic', population)
+}
+
+subpop_infections <- function(population) {
+    .Call('_Rpandemic_subpop_infections', PACKAGE = 'Rpandemic', population)
+}
+

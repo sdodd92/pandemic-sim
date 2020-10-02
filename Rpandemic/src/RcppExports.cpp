@@ -72,6 +72,51 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// generate_population
+List generate_population(List popParams, List virusParams);
+RcppExport SEXP _Rpandemic_generate_population(SEXP popParamsSEXP, SEXP virusParamsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type popParams(popParamsSEXP);
+    Rcpp::traits::input_parameter< List >::type virusParams(virusParamsSEXP);
+    rcpp_result_gen = Rcpp::wrap(generate_population(popParams, virusParams));
+    return rcpp_result_gen;
+END_RCPP
+}
+// subpop_memberships
+List subpop_memberships(SEXP population);
+RcppExport SEXP _Rpandemic_subpop_memberships(SEXP populationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type population(populationSEXP);
+    rcpp_result_gen = Rcpp::wrap(subpop_memberships(population));
+    return rcpp_result_gen;
+END_RCPP
+}
+// subpop_connections
+List subpop_connections(SEXP population);
+RcppExport SEXP _Rpandemic_subpop_connections(SEXP populationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type population(populationSEXP);
+    rcpp_result_gen = Rcpp::wrap(subpop_connections(population));
+    return rcpp_result_gen;
+END_RCPP
+}
+// subpop_infections
+NumericVector subpop_infections(SEXP population);
+RcppExport SEXP _Rpandemic_subpop_infections(SEXP populationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type population(populationSEXP);
+    rcpp_result_gen = Rcpp::wrap(subpop_infections(population));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_Rpandemic_test_params", (DL_FUNC) &_Rpandemic_test_params, 5},
@@ -79,6 +124,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_Rpandemic_generate_world", (DL_FUNC) &_Rpandemic_generate_world, 2},
     {"_Rpandemic_increment_days", (DL_FUNC) &_Rpandemic_increment_days, 3},
     {"_Rpandemic_change_lockdown", (DL_FUNC) &_Rpandemic_change_lockdown, 2},
+    {"_Rpandemic_generate_population", (DL_FUNC) &_Rpandemic_generate_population, 2},
+    {"_Rpandemic_subpop_memberships", (DL_FUNC) &_Rpandemic_subpop_memberships, 1},
+    {"_Rpandemic_subpop_connections", (DL_FUNC) &_Rpandemic_subpop_connections, 1},
+    {"_Rpandemic_subpop_infections", (DL_FUNC) &_Rpandemic_subpop_infections, 1},
     {NULL, NULL, 0}
 };
 
