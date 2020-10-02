@@ -13,7 +13,7 @@ List generate_population(List popParams, List virusParams) {
   int sociability = popParams["sociability"];
   Population *population = new Population((unsigned long)popParams["pop_size"], (double)popParams["compliance"], (double)popParams["resistance"]);
   
-  population->random_structure((int)popParams["sociability"]);
+  population->define_structure((int)popParams["sociability"], 2000);
 
   double contagiousness = virusParams["contagiousness"];
   double mortality_rate = virusParams["mortality_rate"];

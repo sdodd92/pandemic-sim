@@ -1,6 +1,6 @@
 O_LEVEL=2
 WARNINGS=-Wall
-BUILD_FLAGS=-std=c++11 -O$(O_LEVEL) -Iinclude $(WARNINGS)
+BUILD_FLAGS=-std=c++11 -fopenmp -O$(O_LEVEL) -Iinclude $(WARNINGS)
 GCC=g++ $(BUILD_FLAGS)
 
 RAW_FILES=core/PandemicEntities/Pathogen.cpp core/PandemicEntities/Person.cpp core/PandemicEntities/Community.cpp
@@ -21,9 +21,6 @@ super-pop:
 
 super-pop-debug:
 	$(GCC) -g -o bin/super-pop-debug cli/src/main-super-pop.cc $(RAW_FILES) $(EXTRA_FILES)
-
-raw-parallel:
-	$(GCC) -fopenmp -DPARALLEL_MINGLE -o bin/parallel-build cli/src/main.cc $(RAW_FILES)
 
 static-build: lib/libpandemicentities.a
 	$(GCC) -o bin/static-build cli/src/main.cc lib/libpandemicentities.a   
