@@ -15,7 +15,6 @@ public:
     Person();
     Person(const Person& orig);
     Person(double compliance, double resistance);
-    virtual ~Person();
     
     unsigned int get_date_infected() {
         int date_infected = this->infection_date;
@@ -35,9 +34,12 @@ public:
     bool survival_update(int date);
     
     bool is_alive() {return alive;};
+    bool is_contagious() {return contagious;};
     
-    Pathogen* pass_infection();
+    bool infect(int date, Person* new_host);
     
+    Pathogen* get_infection() {return infection;};
+
 private:
     double compliance, resistance;
     

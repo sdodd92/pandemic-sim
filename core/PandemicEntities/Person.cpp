@@ -67,8 +67,12 @@ bool Person::survival_update(int date) {
         if (days_elapsed >= total_length) {
             sick = false;
             infected = false;
+            contagious = false;
+            return true;  // shortcut - if the person has made it through the disease don't attempt kill
         }
-        else if (days_elapsed > incubation_period) {
+        if (days_elapsed > infection->get_latent_period())
+        	contagious = true;
+        if (days_elapsed > incubation_period) {
             sick = true;
             if (infection->attempt_kill(resistance)) {
                 alive = false;
@@ -81,17 +85,24 @@ bool Person::survival_update(int date) {
 }
 
 
-Pathogen* Person::pass_infection() {
+bool Person::infect(int date, Person* new_host) {
+
+	if (infected) {
     
-    // currently passes a POINTER to the pathogen (no mutation)
-    Pathogen *new_infection = infection;
-    
-    // put more complex code here...?
-    
-    return new_infection;
+		// currently passes a POINTER to the pathogen (no mutation)
+		bool passed_infection = false;
+		int date_delta = date - infection_date;
+
+		if (date_delta > infection->get_latent_period())
+			passed_infection = infection->infect(new_host, date_delta, date) ;
+
+		// put more complex code here...?
+
+		return passed_infection;  // return null if the latent period has not yet elapsed
+	}
+
+	return false; // do nothing if the person is not currently infected
     
 }
 
-Person::~Person() {
-}
 

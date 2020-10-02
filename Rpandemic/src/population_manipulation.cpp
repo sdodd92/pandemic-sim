@@ -1,5 +1,5 @@
 #include <Rcpp.h>
-#include "../../core/pandemicentities.h"
+#include "../../include/pandemicentities.h"
 #include "pandemicInterface.h"
 using namespace Rcpp;
 

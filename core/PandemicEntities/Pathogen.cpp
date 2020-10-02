@@ -6,6 +6,7 @@
  */
 
 #include "Pathogen.h"
+#include "Person.h"
 #include <random>
 #include <cmath>
 
@@ -69,6 +70,18 @@ bool Pathogen::attempt_kill(double host_resistance) {
     return kill;
 }
 
-Pathogen::~Pathogen() {
+bool Pathogen::infect(Person* new_host, int date_delta, int date) {
+	bool success = false;
+	std::uniform_real_distribution<float> draw_infected_prob(0.0, 1.0);
+	int disease_course = disease_length + incubation_period;
+
+	if (date_delta > latent_period & date_delta < disease_course) {
+		float infected_roll = draw_infected_prob(generator);
+		if (infected_roll < contagiousness)
+			success = new_host->catch_infection(this, date, false);
+	}
+
+	return success;
+
 }
 

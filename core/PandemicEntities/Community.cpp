@@ -7,27 +7,50 @@
 
 #include "Community.h"
 
-Community::Community() {
+#define init_random() generator(std::random_device{}())
+
+Community::Community() : init_random() {
     pop_size = 0;
     base_sociability = 0;
 }
 
-Community::Community(int sociability) {
+Community::Community(int sociability) : init_random() {
     pop_size = 0;
     base_sociability = sociability;
 }
 
+Community::Community(int sociability, long pop_size, double avg_compliance, double avg_resistance) : init_random() {
+	this->pop_size = 0; // initialize pop-size as zero so as not to break the add-person loop below (this is messy :( )
+	base_sociability = sociability;
+
+	for (int i=0; i<pop_size; ++i)
+		add_person(avg_compliance, avg_resistance); //todo draw compliance/resistance from distribution
+
+}
+
+
 
 void Community::add_person(Person *person) {
     
-    pop_size++;
     population.push_back(person);
+    pop_size++;
+
+}
+
+bool Community::safely_add_person(Person* person) {
+    for (int i=0; i < pop_size; ++i)
+    	// reject the addition of this person is already in the population
+    	if (population[i]->get_uid() == person->get_uid())
+    		return false;
     
+    add_person(person);
+    return true;
 }
 
 void Community::add_person(double compliance, double resistance) {
     Person *new_person = new Person(compliance, resistance);
-    this->add_person(new_person);
+    add_person(new_person);
+
 }
 
 
@@ -45,7 +68,7 @@ unsigned long Community::initiate_infection(Pathogen *pathogen, int date, unsign
 unsigned long Community::get_num_infected() {
     unsigned long num_infected = 0;
     
-    for (Person *person : population) 
+    for (Person *person : population)
         if (person->is_alive() & person->is_infected())
             num_infected++;
     
@@ -53,40 +76,71 @@ unsigned long Community::get_num_infected() {
 }
 
 
-long Community::pairwise_interaction(Person* person_1, Person* person_2, int date) {
-    
-    long is_infected = 0;
-    
-    if (person_1->is_infected()) {
-        
-        int date_delta = date - person_1->get_date_infected();
-        Pathogen *new_infection = person_1->pass_infection();
-        
-        int latent_period = new_infection->get_latent_period();
-        int disease_course = new_infection->get_disease_length() + new_infection->get_incubation_period();
-        
-        if (date_delta > latent_period & date_delta < disease_course) {
-            std::uniform_real_distribution<double> dist(0.0, 1.0);
-            
-            float infected = dist(generator);
-            
-            if (infected < new_infection->get_contagiousness()) {
-                //maybe add mutation logic here...?
-                is_infected += person_2->catch_infection(new_infection, date, false);
-            }
-        }
-        
-    }
-    
-    return is_infected;
-    
-}
-
 long Community::mingle(int date) {
     long new_infections = 0; 
     
+    if (base_sociability > 0) {
+    	new_infections += mingle_partial(date);
+    } else if (base_sociability < 0) {
+    	new_infections += mingle_all(date);
+    }
+    // if base_sociability = 0 then don't do anything
+
+    return new_infections;
+}
+
+long Community::mingle_all(int date) {
+
+	/*
+	 * this is a more efficient interaction algorithm which can be applied if all members are guaranteed to interact
+	 *
+	 * in this case, we simply iterate through the population until an infection is found
+	 *
+	 * if an infection is found, we iterate through the population again to expose everyone
+	 *
+	 * interaction runtime should in this case scale roughly linearly with population size
+	 */
+
+	long new_infections = 0;
+
+	Pathogen* virus = NULL; // todo convert this to a set to accomodate mutations
+	int date_delta;
+
+	for (Person* person_1 : population) {
+		if (person_1->is_contagious()) {
+			virus = person_1->get_infection();
+			date_delta = date - person_1->get_date_infected();
+			break;
+		}
+	}
+
+	// exit if no infection was found
+	if (virus == NULL) return new_infections;
+
+	//otherwise, expose each vulnerable person to the virus
+	for (Person* person_2 : population)
+		new_infections += virus->infect(person_2, date_delta, date);
+
+
+	return new_infections;
+
+}
+
+long Community::mingle_partial(int date) {
+
+	/*
+	 * this is probably the most costly function in the entire model
+	 * ...
+	 */
+
+	long new_infections = 0;
+
     Person *person_1, *person_2;
     
+
+    std::uniform_int_distribution<long> draw_interactee(0, pop_size - 1);
+
+
     for (long i=0;pop_size > 1 & i < pop_size; i++) {
         
         person_1 = population[i];
@@ -94,25 +148,15 @@ long Community::mingle(int date) {
         if (person_1->is_alive()) { //don't iterate on dead ppl (efficiency...)
             
             int sociability;
-            if (base_sociability < 0) {
-            // negative sociability factor means all possible interactions occur
-                for (long j=0; j < pop_size; ++j) 
-                    if (j != i) {
-                        person_2 = population[j];
-                        new_infections += pairwise_interaction(person_1, person_2, date);
-                    };
-                        
-            } else {
-            // otherwise draw number of interactions from poisson mean
-                sociability = base_sociability;
+            //draw number of interactions from poisson mean
+            sociability = base_sociability;
 
             std::poisson_distribution<int> draw_interaction_count(sociability);
             int interactions = draw_interaction_count(generator);
 
             for (int ii=0; ii < interactions; ii++) { 
+
                 // select n interactees based on the count drawn above
-                std::uniform_int_distribution<long> draw_interactee(0, pop_size - 1);
-                
                 long j = draw_interactee(generator);
                 person_2 = population[j];
                 
@@ -126,18 +170,17 @@ long Community::mingle(int date) {
                 // todo put logging logic here
 
                 // interaction should be symmetrical (each person has equal chance of infecting the other)
-                new_infections += pairwise_interaction(person_1, person_2, date);
-                new_infections += pairwise_interaction(person_2, person_1, date);
+                new_infections += person_1->infect(date, person_2);
 
             } // for (int ii=0; ii < interactions; ii++)
             
-           } // if (base_sociability < 0)
         } // if (person_1->is_alive())
-    } // long Community::mingle(int date)
-    
-    
+
+    } // for (long i=0;pop_size > 1 & i < pop_size; i++)
+
     return new_infections;
-}
+} // long Community::mingle(int date)
+
 
 unsigned long Community::update_health(int date) {
     unsigned long new_deaths = 0;
@@ -156,8 +199,8 @@ unsigned long Community::update_health(int date) {
 
 unsigned long Community::get_num_died() {
     unsigned long num_died = 0;
-    
-    for (Person *person : population) 
+
+    for (Person *person : population)
         if (!person->is_alive())
             num_died++;
     
@@ -175,4 +218,20 @@ void Community::reduce_sociability(double reduction_factor) {
     
     
 }
+
+void Community::remove_person(unsigned long id) {
+
+	population.erase(population.begin() + id);
+	pop_size--;
+
+}
+
+
+void Community::update_infection_log(int date) {
+
+	for (Person* person : population)
+		infection_log[date][person->get_uid()] = person->is_infected();
+
+}
+
 

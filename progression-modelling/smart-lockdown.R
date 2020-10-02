@@ -1,8 +1,8 @@
 library(Rpandemic)
 library(magrittr)
 
-update_interval <- 7
-total_run_time <- 180
+update_interval <- 21
+total_run_time <- 360
 
 population.params <- list(
   sociability = 20,
