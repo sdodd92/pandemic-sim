@@ -65,6 +65,40 @@ void Population::random_structure(long avg_community_size) {
 } // Population::define_structure(long avg_community_size)
 
 
+void Population::define_structure(long avg_community_size, unsigned long num_communities) {
+
+	std::uniform_int_distribution<long> draw_member_index(0, pop_size - 1);
+	std::poisson_distribution<long> draw_community_size(avg_community_size);
+
+
+	for (int i=0; i < num_communities; ++i) {
+
+		long community_size = draw_community_size(generator);
+
+		// initialize the new sub-community and increment the running counter
+		subcommunities.push_back(SubCommunity()); // negative sociability means all possible interactions
+		n_subcommunities++;
+
+		// get a pointer to the new community (readability)
+		Community* new_community = &(subcommunities[n_subcommunities - 1]);
+
+		for (long n=0; n < community_size; ++n) {
+
+			bool success = false;
+			long i;
+			while (!success) {
+				i = draw_member_index(generator);
+				success = Border::share(this, new_community, i);
+			} // while !success
+
+		} // for (long n=0; n < community_size; ++n)
+
+
+	} // for (int i=0; i < num_communities; ++i)
+
+}
+
+
 long Population::mingle(int date) {
 
 	/*

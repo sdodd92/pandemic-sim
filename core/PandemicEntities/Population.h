@@ -28,6 +28,7 @@ public:
 	Population(long pop_size, double avg_compliance, double avg_resistance);
 
 	void random_structure(long avg_community_size);
+	void define_structure(long avg_community_size, unsigned long num_communities);
 
 	unsigned long subpop_num_infected(long i) {return subcommunities[i].get_num_infected();};
 	unsigned long* num_infected_breakdown();
