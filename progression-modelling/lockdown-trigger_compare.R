@@ -5,7 +5,7 @@ library(scales)
 library(viridis)
 library(ggplot2)
 
-registerDoParallel(3)
+registerDoParallel(11)
 
 pop.size <- 1e6
 
@@ -36,7 +36,7 @@ lockdown_results <- foreach(
   .packages = "Rpandemic"
 ) %dopar% {
   
-  result <- lockown_run(
+  result <- lockdownSim(
     days = days,
     population.params = population.params,
     virus.params = virus.params,
