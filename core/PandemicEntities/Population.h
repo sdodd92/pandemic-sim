@@ -11,6 +11,7 @@
 #include "Community.h"
 #include "SubCommunity.h"
 #include <vector>
+#include <random>
 #include <unordered_map>
 
 
@@ -28,7 +29,8 @@ public:
 	Population(long pop_size, double avg_compliance, double avg_resistance);
 
 	void random_structure(long avg_community_size);
-	void define_structure(long avg_community_size, long num_communities);
+	void define_structure(long avg_community_size, long num_communities, long from_index=0,long to_index=NULL);
+	void define_tight_structure(int avg_community_size);
 
 	unsigned long subpop_num_infected(long i) {return subcommunities[i].get_num_infected();};
 	unsigned long* num_infected_breakdown();
@@ -36,7 +38,7 @@ public:
 	long* get_pop_sizes();
 	long get_n_subcommunities() {return n_subcommunities;};
 
-	long mingle(int date);
+	long mingle(int date) override;
 
 	Network get_person_network();
 	Network get_community_network();
@@ -46,6 +48,7 @@ public:
 protected:
 	std::vector<SubCommunity> subcommunities;
 	long n_subcommunities;
+	void allocate_structure(long, std::uniform_int_distribution<long>&,std::poisson_distribution<long>&);
 };
 
 

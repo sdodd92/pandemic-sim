@@ -14,7 +14,7 @@
 
 Population::Population() : Community() {
 	// initialize a single starting sub-community
-	n_subcommunities = 1;
+	n_subcommunities = 0;
 }
 
 Population::Population(long pop_size, double avg_compliance, double avg_resistance)
@@ -30,13 +30,13 @@ void Population::random_structure(long avg_community_size) {
 
 	std::uniform_int_distribution<long> draw_member_index(0, pop_size - 1);
 	std::unordered_set<long> clumped_ids;
+	std::poisson_distribution<long> draw_community_size(avg_community_size);
 
 	// initialize count of un-allocated individuals
 	long un_clumped = pop_size;
 	long n_clumped = 0;
 
 	while (clumped_ids.size() < pop_size) {
-			std::poisson_distribution<long> draw_community_size(avg_community_size);
 			long community_size = draw_community_size(generator);
 
 			// initialize the new sub-community and increment the running counter
@@ -65,19 +65,16 @@ void Population::random_structure(long avg_community_size) {
 } // Population::define_structure(long avg_community_size)
 
 
-void Population::define_structure(long avg_community_size, long num_communities) {
-
-	std::uniform_int_distribution<long> draw_member_index(0, pop_size - 1);
-	std::poisson_distribution<long> draw_community_size(avg_community_size);
-
-	#pragma omp parallel
+void Population::allocate_structure(long num_communities, std::uniform_int_distribution<long> &draw_member_index, std::poisson_distribution<long> &draw_community_size) {
+#pragma omp parallel
 	{
 
 		std::vector<SubCommunity> tmp_subcommunities;
 		Community* new_community;
+		int i;
 
 		#pragma omp for nowait
-		for (int i=0; i < num_communities; ++i) {
+		for (i=0; i < num_communities; ++i) {
 
 			long community_size = draw_community_size(generator);
 
@@ -107,10 +104,42 @@ void Population::define_structure(long avg_community_size, long num_communities)
 
 	} // #pragma omp parallel
 
-	n_subcommunities = num_communities;
-
+	n_subcommunities += num_communities;
 }
 
+
+
+
+void Population::define_structure(long avg_community_size, long num_communities, long from_index,long to_index) {
+
+	if (to_index == NULL) to_index = pop_size - 1;
+
+	std::uniform_int_distribution<long> draw_member_index(from_index, to_index);
+	std::poisson_distribution<long> draw_community_size(avg_community_size);
+
+	allocate_structure(num_communities, draw_member_index, draw_community_size);
+}
+
+
+void Population::define_tight_structure(int avg_community_size) {
+
+	std::poisson_distribution<int> draw_community_size(avg_community_size);
+
+	long pop_start = 0, pop_end = 0;
+	while (pop_start < pop_size) {
+
+		int pop_size = draw_community_size(generator);
+		pop_end = pop_start + pop_size;
+		if (pop_end > pop_size) pop_end = pop_size;
+		subcommunities.push_back(SubCommunity());
+
+		for (long i = pop_start; i < pop_end; ++i)
+			Border::share(this, &subcommunities.back(), i);
+
+		pop_start = pop_end + 1;
+
+	}
+}
 
 long Population::mingle(int date) {
 
