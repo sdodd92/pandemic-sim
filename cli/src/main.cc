@@ -103,8 +103,9 @@ int main(int argc, char** argv) {
 	 infected[0] = 1; // we know one person is infected since we forced it
 	 new_infections[0] = 1;
 	 
-	 int date = 1;  // TODO: decide if this is correct - are we losing info from day 0?
-	 while (date < n_iter) {
+	 //int date = 1;  // TODO: decide if this is correct - are we losing info from day 
+	 #pragma omp parallel
+	 for (int date = 1; date < n_iter; date++) {
 	 	
 	 		  new_infections[date] = population.mingle(date);
 	 		
@@ -112,9 +113,10 @@ int main(int argc, char** argv) {
 
   			  infected[date] = population.get_num_infected();
 	 
-    		date++;
+    		//date++;
 		 
 	 }
+	 
 	 
 	 
         

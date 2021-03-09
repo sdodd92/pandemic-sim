@@ -31,6 +31,8 @@ public:
     
     Community(int sociability, long pop_size, double avg_compliance, double avg_resistance);
 
+    virtual ~Community() = default;
+
     virtual void add_person(Person *person);
     void add_person(double compliance, double resistance);
     bool safely_add_person(Person *person);
@@ -39,15 +41,15 @@ public:
     long get_pop_size() const {return pop_size;};
     Person* get_person(long index) const {return population[index];};
 
-    long mingle(int date);
+    virtual long mingle(int date);
     
     unsigned long initiate_infection(Pathogen *pathogen, int date, unsigned long member);
     
-    unsigned long get_num_infected();
+    virtual unsigned long get_num_infected();
     
-    unsigned long update_health(int date);
+    virtual unsigned long update_health(int date);
     
-    unsigned long get_num_died();
+    virtual unsigned long get_num_died();
     
     int get_sociability() {return base_sociability;};
     

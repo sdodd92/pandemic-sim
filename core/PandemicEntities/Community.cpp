@@ -101,7 +101,7 @@ long Community::mingle_all(int date) {
 	 * interaction runtime should in this case scale roughly linearly with population size
 	 */
 
-	long new_infections = 0;
+	long new_infections;
 
 	Pathogen* virus = NULL; // todo convert this to a set to accomodate mutations
 	int date_delta;
@@ -115,7 +115,7 @@ long Community::mingle_all(int date) {
 	}
 
 	// exit if no infection was found
-	if (virus == NULL) return new_infections;
+	if (virus == NULL) return 0;
 
 	//otherwise, expose each vulnerable person to the virus
 	for (Person* person_2 : population)
@@ -140,8 +140,8 @@ long Community::mingle_partial(int date) {
 
     std::uniform_int_distribution<long> draw_interactee(0, pop_size - 1);
 
-
-    for (long i=0;pop_size > 1 & i < pop_size; i++) {
+	#pragma omp for
+    for (long i=0;i < pop_size; i++) {
         
         person_1 = population[i];
         
