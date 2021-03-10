@@ -23,7 +23,8 @@ subroutine wrap_subpops_c(subpops_c, pop_c, n_subpops, sociability) bind(c, name
 	type(c_ptr), intent(in) :: pop_c 
 	type(c_ptr), intent(out) :: subpops_c
 	
-	integer, intent(in) :: n_subpops, sociability
+	integer(kind=c_long), intent(in) :: n_subpops
+	integer(kind=c_int), intent(in) :: sociability
 
 !	type(sub_pop), dimension(n_subpops) :: subpops
 	type(sub_pop), dimension(:), pointer :: subpops_f
@@ -39,6 +40,35 @@ subroutine wrap_subpops_c(subpops_c, pop_c, n_subpops, sociability) bind(c, name
 	subpops_c = c_loc(subpops_f)
 
 end subroutine wrap_subpops_c
+
+subroutine wrap_families_c(families_c, pop_c, n_families, avg_family_size) bind(c, name='defineFortranFamilies')
+
+	use entities
+	use iso_c_binding
+
+	type(c_ptr), intent(in) :: pop_c
+	type(c_ptr), intent(out) :: families_c
+
+	integer(kind=c_int), intent(in) :: avg_family_size
+	integer(kind=c_long), intent(out) :: n_families
+
+	type(population), pointer :: pop_f
+	type(sub_pop), dimension(:), allocatable, target, save :: families_f  
+	!TODO decide if save is ok here (should be fine I think)...
+
+	real :: avg_family_size_real
+
+	call c_f_pointer(pop_c, pop_f)
+	
+	avg_family_size_real=avg_family_size
+	call define_families(pop_f, families_f, avg_family_size_real)
+
+!	families_ptr => families_f
+	families_c = c_loc(families_f)
+	n_families = size(families_f)
+	
+
+end subroutine wrap_families_c
 
 
 subroutine mingle_pop_c(pop_c, subpops_c, n_subpops, c_date, new_infected) bind(c, name='mingleFortranPop')

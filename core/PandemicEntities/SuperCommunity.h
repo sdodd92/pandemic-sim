@@ -14,6 +14,13 @@
 
 
 class SuperCommunity {
+
+
+	friend SubPopulation::SubPopulation(SuperCommunity *base_pop);
+	friend SubPopulation::SubPopulation(SuperCommunity *base_pop, long n_subpops, int avg_pop_size);
+	friend SubPopulation::SubPopulation(SuperCommunity *base_pop, int avg_family_size);
+
+
 public:
 	SuperCommunity();
 
@@ -28,9 +35,7 @@ public:
 	void initiate_infection(Pathogen &pathogen, int date, long index=0);
 
 	SubPopulation* define_generic_subpops(long n_subpops, int avg_pop_size);
-
-	friend SubPopulation::SubPopulation(SuperCommunity *base_pop);
-	friend SubPopulation::SubPopulation(SuperCommunity *base_pop, long n_subpops, int avg_pop_size);
+	SubPopulation* define_families(int avg_family_size);
 
 
 protected:

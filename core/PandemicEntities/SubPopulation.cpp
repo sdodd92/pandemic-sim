@@ -27,10 +27,15 @@ SubPopulation::SubPopulation(SuperCommunity* base_pop) {
 }
 
 SubPopulation::SubPopulation(SuperCommunity* base_pop, long n_subpops, int avg_pop_size) {
-	subpops=0;
 	defineFortranSubPops(&subpops, &(base_pop->f_population), &n_subpops, &avg_pop_size);
 	this->population = base_pop->f_population;
 	this->n_subpops = n_subpops;
+	locked_down=false;
+}
+
+SubPopulation::SubPopulation(SuperCommunity* base_pop, int avg_family_size) {
+	defineFortranFamilies(&subpops, &(base_pop->f_population), &n_subpops, &avg_family_size);
+	this->population = base_pop->f_population;
 	locked_down=false;
 }
 

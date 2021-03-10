@@ -113,7 +113,7 @@ subroutine define_subpops(pop, subpops, avg_pop_size)
 
 	integer :: i
 
-	!$omp do
+	!$omp  parallel do
 	do i=1, size(subpops)
 		call allocate_subpop(subpops(i), 1, pop%pop_size, avg_pop_size)
 	end do
@@ -276,7 +276,7 @@ subroutine mingle(pop, subpops, date)
 
 	integer :: i
 	
-	!$omp do
+	!$omp parallel do
 	do i=1, size(subpops)
 		call mingle_subpop(pop, subpops(i), date)
 	end do  ! i=1, size(subpops)
@@ -299,7 +299,7 @@ subroutine update(pop, date)
 
 	allocate(effective_mortality_rate(pop%pop_size))
 	
-	!$omp do
+	!$omp parallel do
 	do i=1, pop%pop_size
 		associate(													&
 			mortality_rate => pop%infection(i)%ptr%mortality_rate, 	&
@@ -320,7 +320,7 @@ subroutine update(pop, date)
 
 	call random_number(roll_to_kill)
 
-	!$omp do
+	!$omp parallel do
 	do i=1, pop%pop_size
 		associate (												&
 			infected => pop%infected(i),						&

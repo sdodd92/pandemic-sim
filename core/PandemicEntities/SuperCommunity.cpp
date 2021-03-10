@@ -17,7 +17,6 @@ SuperCommunity::SuperCommunity() {
 }
 
 SuperCommunity::SuperCommunity(long pop_size) {
-	f_population = 0;
 	f_subpops = 0;
 
 	n_subpops = 0;
@@ -73,6 +72,12 @@ void SuperCommunity::initiate_infection(Pathogen &pathogen, int date, long index
 
 SubPopulation* SuperCommunity::define_generic_subpops(long n_subpops, int avg_pop_size) {
 	community_layers.push_back(SubPopulation(this, n_subpops, avg_pop_size));
+
+	return &community_layers.back();
+}
+
+SubPopulation* SuperCommunity::define_families(int avg_family_size) {
+	community_layers.push_back(SubPopulation(this, avg_family_size));
 
 	return &community_layers.back();
 }

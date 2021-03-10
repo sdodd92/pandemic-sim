@@ -20,6 +20,9 @@ public:
 
 	SubPopulation(SuperCommunity *base_pop, long n_subpops, int avg_pop_size);
 
+
+	SubPopulation(SuperCommunity *base_pop, int avg_family_size);
+
 	long mingle(int date);
 
 	void set_lockdown() {locked_down=true;};

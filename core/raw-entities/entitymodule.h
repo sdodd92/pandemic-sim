@@ -23,6 +23,8 @@
 
 		void initFortranInfection(void *pop, double *contagious, double *mortality, int *length, int *latency, int *date, long *index);
 
+		void defineFortranFamilies(void *families, void *pop, long *n_families, int *avg_family_size);
+
 #ifdef __cplusplus
 	}
 #endif
