@@ -14,8 +14,8 @@ int main() {
 
 	SuperCommunity mypop(POP_SIZE);
 	
-//	mypop.define_subpops(N_COMMUNITIES, SOCIABILITY);
-	SubPopulation *sub_pop = mypop.define_generic_subpops(N_COMMUNITIES, SOCIABILITY);
+	mypop.define_generic_subpops(N_COMMUNITIES, SOCIABILITY);
+	mypop.define_families(SOCIABILITY);
 
 	Pathogen virus(.5, .02, 31, 0, 2);
 
@@ -23,7 +23,7 @@ int main() {
 
 //	mypop.initiate_infection(virus, 0, 10);
 	#ifndef NOPAR
-	omp_set_num_threads(8);
+	omp_set_num_threads(11);
 	#endif
 
 	unsigned long num_infected[N_DAYS];
@@ -32,11 +32,9 @@ int main() {
 	num_infected[0] = 0;
 //	num_died[0] = 0;
 
-	#pragma omp parallel
-	{
+
 	for (int i=1; i<N_DAYS; ++i)
 		num_infected[i] = mypop.mingle(i);
-	}
 
 //		mypop.update_health(d);
 //		num_infected[d] = mypop.get_num_infected();

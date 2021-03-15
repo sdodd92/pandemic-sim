@@ -40,8 +40,6 @@ long SuperCommunity::mingle(int date) {
 void SuperCommunity::initiate_infection(Pathogen &pathogen, int date, long index) {
 
 	//convert from 0-indexing to 1-indexing
-	date++;
-	index++;
 
 	double contagiousness = pathogen.get_contagiousness();
 	double mortality_rate = pathogen.get_mortality_rate();

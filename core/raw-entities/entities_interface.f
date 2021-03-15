@@ -112,6 +112,11 @@ subroutine wrap_c_pathogen(pop_c, contagious, mortality, length, latency, date, 
 
 	type(pathogen), target, save :: pathogen_f
 	type(population), pointer :: pop_f
+	integer :: f_date, f_ind
+
+	! convert from zero-indexing to 1-indexing
+	f_date = date + 1
+	f_ind = ind + 1
 
 	pathogen_f%contagiousness = contagious
 	pathogen_f%mortality_rate = mortality
@@ -119,7 +124,7 @@ subroutine wrap_c_pathogen(pop_c, contagious, mortality, length, latency, date, 
 	pathogen_f%latent_period = latency
 
 	call c_f_pointer(pop_c, pop_f)
-	call initiate_infection(pop_f, ind, date, pathogen_f)
+	call initiate_infection(pop_f, f_ind, f_date, pathogen_f)
 
 
 end subroutine wrap_c_pathogen

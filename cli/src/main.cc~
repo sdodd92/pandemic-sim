@@ -5,9 +5,6 @@
 #include <getopt.h>
 
 void write_results(std::ostream& os, unsigned int n_iter, unsigned long* infected, unsigned long* died, long* new_infections);
-void write_network(std::ostream&, Population&);
-void write_infection_log(std::ostream&, Population&);
-void write_subcommunities(std::ostream&, Population&);
 
 int main(int argc, char** argv) {
 
@@ -32,24 +29,10 @@ int main(int argc, char** argv) {
 	//declare output file name
 	std::string outfile;
 	bool fileout = false;
-
-	//declare network output file
-	std::string network_file;
-	bool network_out = false;
-
-	//declare infection log output file
-	std::string log_file;
-	bool log_out = false;
-	int log_interval = 7;
-	std::ofstream log;	
 	
-	std::string subcomm_file;
-	bool subcomm_out = false;
-	std::ofstream subcomm_output;
-
 	//read command-line options
 	int c;
-	 while ((c = getopt(argc, argv, "s:c:r:C:M:I:D:L:n:N:O:W:l:i:S:")) != -1)
+	 while ((c = getopt(argc, argv, "s:c:r:C:M:I:D:L:n:N:O:")) != -1)
         switch (c) {
             case 's':
                 std::sscanf(optarg, "%d", &sociability);
@@ -84,23 +67,6 @@ int main(int argc, char** argv) {
             	 outfile.assign(optarg);
             	 fileout = true;
             	 break;
-				case 'W':
-				 	 network_file.assign(optarg);
-				 	 network_out = true;
-				 	 break;
-				case 'S':
-				 	 subcomm_file.assign(optarg);
-				 	 subcomm_out = true;
-				 	 subcomm_output = std::ofstream(subcomm_file);
-				 	 break;
-				case 'l':
-				 	 log_file.assign(optarg);
-				 	 log_out = true;
-				 	 log = std::ofstream(log_file);
-				 	 break;
-				case 'i':
-				 	 std::sscanf(optarg, "%d", &log_interval);
-				 	 break;
             default:
                 abort();
         }
@@ -111,8 +77,9 @@ int main(int argc, char** argv) {
     }
         
     //initialize world entities
-    Population population(pop_size, compliance, resistance);
-	population.random_structure(sociability);
+    Community population(sociability);
+    for (int p=0; p < pop_size; ++p) 
+		population.add_person(compliance, resistance);   
 		
 	 virus = new Pathogen(
 		   contagiousness,
@@ -136,7 +103,8 @@ int main(int argc, char** argv) {
 	 infected[0] = 1; // we know one person is infected since we forced it
 	 new_infections[0] = 1;
 	 
-	 int date = 0;  // TODO: decide if this is correct - are we losing info from day 0?
+	 int date = 1;  // TODO: decide if this is correct - are we losing info from day 
+	 #pragma omp parallel
 	 while (date < n_iter) {
 	 	
 	 		  new_infections[date] = population.mingle(date);
@@ -145,34 +113,19 @@ int main(int argc, char** argv) {
 
   			  infected[date] = population.get_num_infected();
 	 
-    		//std::cout << date % log_interval << "\n\n";
-			if (log_out & date % log_interval == 0) 
-				population.update_infection_log(date);
-				
-			date++;
+    		date++;
+		 
 	 }
+	 
 	 
 	 
         
 	if (fileout) {
-		std::ofstream output(outfile);
-		write_results(output, n_iter, infected, died, new_infections);	
+		std::ofstream Outfile(outfile);
+		write_results(Outfile, n_iter, infected, died, new_infections);	
 	} else {
 		write_results(std::cout, n_iter, infected, died, new_infections);
 	}
-
-	if (network_out) {
-		
-		std::ofstream output(network_file);
-		write_network(output, population);
-
-	}
-	
-	if (log_out) 
-		write_infection_log(log, population);	
-		
-	if (subcomm_out)
-		write_subcommunities(subcomm_output, population);
 
 	
 	
@@ -190,38 +143,3 @@ void write_results(std::ostream& os, unsigned int n_iter, unsigned long* infecte
 	}
 
 }
-
-void write_network(std::ostream& output, Population& population) {
-
-	Population::Network network = population.get_person_network();
-
-	output << "source,target,weight\n";
-	for (auto& node_from : network)
-		for (auto& node_to : node_from.second) 
-			output << node_from.first << ',' << node_to.first << ',' << node_to.second << '\n';
-
-
-
-}
-
-
-void write_infection_log(std::ostream& output, Population& population) {
-	Population::InfectionLog input = population.get_infection_log();
-	
-	output << "date,uid,value\n";
-	for (auto& level_1 : input)
-		for (auto& level_2 : level_1.second)
-			output << level_1.first << ',' << level_2.first << ',' << level_2.second << '\n';
-}
-
-void write_subcommunities(std::ostream& output, Population& population) {
-	Population::MembershipNode input = population.get_community_memberships();
-	
-	output << "community,member\n";
-	for (auto& community : input)
-		for (auto& member : community.second)
-			output << community.first << ',' << member << '\n';
-}
-
-
-
