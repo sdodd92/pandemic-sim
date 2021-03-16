@@ -29,12 +29,18 @@ void SuperCommunity::define_subpops(long n_subpops, int sociability) {
 	this->n_subpops = n_subpops;
 }
 
-long SuperCommunity::mingle(int date) {
-	long new_infected = 0;
-	for (auto community : community_layers)
-		new_infected += community.mingle(date);
+void SuperCommunity::mingle(int date, long &new_infected, long &new_dead) {
+	
+	new_infected = 0;
+	new_dead = 0;
 
-	return new_infected;
+
+	long tmp_new_infected, tmp_new_dead;
+	for (auto community : community_layers) {
+		community.mingle(date, &tmp_new_infected, &tmp_new_dead);
+		new_infected += tmp_new_infected;
+		new_dead += tmp_new_dead;
+	}
 }
 
 void SuperCommunity::initiate_infection(Pathogen &pathogen, int date, long index) {

@@ -39,13 +39,11 @@ SubPopulation::SubPopulation(SuperCommunity* base_pop, int avg_family_size) {
 	locked_down=false;
 }
 
-long SubPopulation::mingle(int date) {
-	long new_infected;
+void SubPopulation::mingle(int date, long *new_infected, long *new_dead) {
 
 	if (locked_down)
-		return 0;
+		return;
 
-	mingleFortranPop(&population, &subpops, &n_subpops, &date, &new_infected);
+	mingleFortranPop(&population, &subpops, &n_subpops, &date, new_infected, new_dead);
 
-	return new_infected;
 }

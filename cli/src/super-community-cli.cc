@@ -26,15 +26,15 @@ int main() {
 	omp_set_num_threads(11);
 	#endif
 
-	unsigned long num_infected[N_DAYS];
-//	unsigned long num_died[N_DAYS];
+	long num_infected[N_DAYS];
+	long num_died[N_DAYS];
 
 	num_infected[0] = 0;
-//	num_died[0] = 0;
+	num_died[0] = 0;
 
 
 	for (int i=1; i<N_DAYS; ++i)
-		num_infected[i] = mypop.mingle(i);
+		mypop.mingle(i, num_infected[i], num_died[i]);
 
 //		mypop.update_health(d);
 //		num_infected[d] = mypop.get_num_infected();
@@ -43,7 +43,7 @@ int main() {
 
 	std::cout << "DATE,INFECTED,DIED\n";
 	for (int i=0; i<N_DAYS; ++i)
-		std::cout << i << ',' << num_infected[i]/* << ',' << num_died[i]*/ << '\n';
+		std::cout << i << ',' << num_infected[i] << ',' << num_died[i] << '\n';
 
 	
 

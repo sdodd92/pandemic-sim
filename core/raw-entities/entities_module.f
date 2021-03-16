@@ -196,10 +196,11 @@ function get_num_dead(pop) result(count_dead)
 	count_dead = count(.not. pop%alive)
 end function get_num_dead
 
-subroutine mingle_subpop(pop, subpop, date)
+subroutine mingle_subpop(pop, subpop, date, new_infections)
 	type(population), intent(inout) :: pop
 	type(sub_pop), intent(in) :: subpop
 	integer, intent(in) :: date
+	integer, intent(out) :: new_infections
 
 	real :: effective_contagious(size(subpop%members))
 	real, dimension(:), allocatable :: roll_to_infect
@@ -209,6 +210,8 @@ subroutine mingle_subpop(pop, subpop, date)
 	real, dimension(:), allocatable :: valid_contagious
 
 	integer :: i, j,  infection_age, disease_age, count_contagious	
+
+	new_infections = 0
 
 	associate ( 												&
 			infected => pop%infected(subpop%members(:)), 		&
@@ -250,6 +253,7 @@ subroutine mingle_subpop(pop, subpop, date)
 									pop%infected(member) = date !remember subpop is an index vector
 									pop%infection(member)%ptr => valid_infections(j)%ptr
 									pop%immune(member) = .true.
+									new_infections = new_infections + 1
 								end if
 							end do
 						end if
@@ -267,27 +271,32 @@ subroutine mingle_subpop(pop, subpop, date)
 end subroutine mingle_subpop
 
 
-subroutine mingle(pop, subpops, date)
+subroutine mingle(pop, subpops, date, new_infections)
 	type(population), intent(inout) :: pop
 	type(sub_pop), dimension(:), intent(in), target :: subpops
 	integer, intent(in) :: date
+	integer, intent(out) :: new_infections
 	
 
 
-	integer :: i
+	integer :: i, tmp_new_infections
+
+	new_infections = 0
 	
-	!$omp parallel do
+	!$omp parallel do 
 	do i=1, size(subpops)
-		call mingle_subpop(pop, subpops(i), date)
+		call mingle_subpop(pop, subpops(i), date, tmp_new_infections)
+		new_infections = new_infections + tmp_new_infections
 	end do  ! i=1, size(subpops)
 
 
 
 end subroutine mingle
 
-subroutine update(pop, date)
+subroutine update(pop, date, new_dead)
 	type(population), intent(inout) :: pop
 	integer, intent(in) :: date
+	integer, intent(out) :: new_dead
 	
 	real :: roll_to_kill(pop%pop_size)
 	integer :: disease_age(pop%pop_size)
@@ -345,6 +354,9 @@ subroutine update(pop, date)
 			end if
 		end associate
 	end do
+
+	! take advantage of the lag between kill and attribute reset to measure new deaths
+	new_dead = count((.not. pop%alive) .and. (pop%infected > 0))
 
 	where (.not. pop%alive)
 		pop%contagious = 0.

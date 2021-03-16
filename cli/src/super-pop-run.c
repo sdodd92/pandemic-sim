@@ -96,14 +96,14 @@ void step_week(int *date, PandemicReport *report) {
 		is_weekend = true;
 	}
 
-	long n_infected_subpop;
-	long n_infected_families;
+	long n_infected_subpop, n_dead_subpop, n_infected_families, n_dead_families;
 	
 	for (int i=0;i<n_steps & *date < N_DAYS;++i) {
-		mingleFortranPop(&population, &key_subpop, &n_subpops, date, &n_infected_subpop);
-		mingleFortranPop(&population, &family, &n_families, date, &n_infected_families);
+		mingleFortranPop(&population, &key_subpop, &n_subpops, date, &n_infected_subpop, &n_dead_subpop);
+		mingleFortranPop(&population, &family, &n_families, date, &n_infected_families, &n_dead_families);
 
 		report->n_infected[*date] = n_infected_subpop + n_infected_families;
+		report->n_dead[*date] = n_dead_subpop + n_dead_families;
 
 		*date += 1;
 	}

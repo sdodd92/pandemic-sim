@@ -15,7 +15,7 @@
 
 		void defineFortranPop(void* pop, long *pop_size);
 
-		void mingleFortranPop(void *population, void *subpops, long *n_subpops, int *date, long *new_infected);
+		void mingleFortranPop(void *population, void *subpops, long *n_subpops, int *date, long *new_infected, long *new_died);
 
 		 void getFortranNumDied(void *population, long *num_infected);
 

@@ -71,7 +71,7 @@ subroutine wrap_families_c(families_c, pop_c, n_families, avg_family_size) bind(
 end subroutine wrap_families_c
 
 
-subroutine mingle_pop_c(pop_c, subpops_c, n_subpops, c_date, new_infected) bind(c, name='mingleFortranPop')
+subroutine mingle_pop_c(pop_c, subpops_c, n_subpops, c_date, new_infected, new_dead) bind(c, name='mingleFortranPop')
 	
 	use entities
 	use iso_c_binding
@@ -79,18 +79,20 @@ subroutine mingle_pop_c(pop_c, subpops_c, n_subpops, c_date, new_infected) bind(
 	type(c_ptr), intent(inout) :: pop_c
 	type(c_ptr), intent(in) :: subpops_c
 	integer(c_int), intent(in) :: c_date, n_subpops
-	integer(c_long), intent(out) :: new_infected
+	integer(c_long), intent(out) :: new_infected, new_dead
 	type(population), pointer :: pop_f
 	type(sub_pop), dimension(:), pointer :: subpops_f
-	integer :: date
+	integer :: date, tmp_new_infected, tmp_new_dead
 
 	call c_f_pointer(pop_c, pop_f)
 	call c_f_pointer(subpops_c, subpops_f, [n_subpops])
 
 	date = c_date + 1 ! convert c date (0-indexed) to fortran date (1-indexed)
-	call mingle(pop_f, subpops_f, date)
-	call update(pop_f, date)
-	new_infected = get_num_infected(pop_f) ! TODO this is WRONG and needs to be updated!!!
+	call mingle(pop_f, subpops_f, date, tmp_new_infected)
+	call update(pop_f, date, tmp_new_dead)
+
+	new_infected = tmp_new_infected
+	new_dead = tmp_new_dead
 
 !	c_ptr = c_loc(pop_f)
 

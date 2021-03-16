@@ -28,7 +28,7 @@ public:
 
 	void define_subpops(long n_subpops, int sociability);
 
-	long mingle(int date);
+	void mingle(int date, long &new_infected, long &new_dead);
 
 	long get_num_infected();
 
