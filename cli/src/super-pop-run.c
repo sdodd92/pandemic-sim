@@ -35,8 +35,8 @@ bool is_weekend;
 
 	const double CONTAGIOUSNESS = .5;
 	const double MORTALITY_RATE = .02;
-	const double DISEASE_LENGTH = 31;
-	const double LATENCY = 2;
+	const int DISEASE_LENGTH = 31;
+	const int LATENCY = 2;
 
 	long n_families;
 	long n_offices = POP_SIZE / WORK_SIZE;

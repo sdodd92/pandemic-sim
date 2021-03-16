@@ -5,8 +5,11 @@ OMP=-fopenmp
 CXX_FLAGS=-std=c++11 $(DEBUG_FLAG) $(OMP) -O$(O_LEVEL) -Iinclude -Llib $(WARNINGS)
 CXX=g++ $(CXX_FLAGS)
 
-FC_FLAGS=-ffree-form -fbounds-check $(OMP) $(DEBUG_FLAG) $(WARNINGS) -Wno-tabs -Jmod -Imod
+FC_FLAGS=-ffree-form -fbounds-check $(OMP) $(DEBUG_FLAG) $(WARNINGS) -Wno-tabs -Jmod -Imod -Llib
 FC=gfortran $(FC_FLAGS)
+
+CC_FLAGS=-std=c99 $(DEBUG_FLAG) $(OMP) -O$(O_LEVEL) -Iinclude -Llib $(WARNINGS)
+CC=gcc $(CC_FLAGS)
 
 RAW_FILES=core/PandemicEntities/Pathogen.cpp core/PandemicEntities/Person.cpp core/PandemicEntities/Community.cpp core/PandemicEntities/SuperCommunity.cpp core/PandemicEntities/SubPopulation.cpp
 
@@ -23,6 +26,12 @@ raw-profile:
 
 super-build: lib/libentitymodule.a lib/libpandemicentities.a
 	$(CXX) -o bin/supercommunity-test cli/src/super-community-cli.cc -lpandemicentities -lentitymodule -lgfortran
+
+raw-test: lib/libentitymodule.a
+	$(FC) -o test/bin/raw-entity-test test/src/test-raw.f -lentitymodule -lgomp
+
+run-build: lib/libentitymodule.a
+	$(CC) -o bin/run-sim cli/src/super-pop-run.c -lentitymodule -lgfortran  -lm -ldl
 	
 
 static-build: lib/libpandemicentities.a
@@ -75,5 +84,8 @@ clean:
 clear:
 	rm bin/*
 	rm lib/*
+
+clean-test:
+	rm test/bin/*
 
 cleanup: clean clear
