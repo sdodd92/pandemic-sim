@@ -42,9 +42,6 @@ List generate_world(List popParams, List virusParams) {
   XPtr<Pathogen> raw_virus(virus);
   XPtr<Community> raw_population(population);
 
-  PROTECT(raw_virus);
-  PROTECT(raw_population);
-
   return List::create(
     Named("raw_virus") = raw_virus,
     Named("raw_population") = raw_population,

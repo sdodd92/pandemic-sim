@@ -121,15 +121,17 @@ runSim <- function(sim, days = NULL, start_date = NULL, end_date = NULL) {
       end_date <- start_date + days
     }
   }
+  
+  if (end_date - start_date > 0) {
 
   new_sim <- increment_days(start_date, end_date, sim$raw_population)
 
   sim$number_infected <- c(sim$number_infected, new_sim$n_infected)
   sim$number_infections <- c(sim$number_infections, new_sim$n_infections)
   sim$number_deaths <- c(sim$number_deaths, new_sim$n_deaths)
-  sim$date <- c(sim$date, (start_date + 1):end_date)
+  sim$date <- unique(c(sim$date, start_date:(end_date-1)))
   sim$current_date <- end_date
-
+}
   return(sim)
 
 }
