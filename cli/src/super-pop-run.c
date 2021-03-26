@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 typedef struct {
-	size_t *n_dead, *n_infected;
+	size_t *n_dead, *n_infected, *new_infections, *n_recovered;
 	size_t n_days;
 } PandemicReport;
 
@@ -69,11 +69,12 @@ int main(int argc, char** argv) {
 	}
 
 	FILE *output = fopen("run-result.csv", "w");
-	write_output(output, &report);
-	
-	
+	write_output(output, &report);	
 	fclose(output);
 
+//	puts("DATE,NUM_INFECTED,NEW_INFECTIONS,NUM_DEAD\n");
+//	for (int i=0;i < report.n_days;++i)
+//		printf("%d,%lu,%lu,%lu\n",i, report.n_infected[i], report.new_infections[i], report.n_dead[i]);
 
 	return 0;
 }
@@ -96,14 +97,16 @@ void step_week(int *date, PandemicReport *report) {
 		is_weekend = true;
 	}
 
-	long n_infected_subpop, n_dead_subpop, n_infected_families, n_dead_families;
+	long n_dead_subpop, n_dead_families, new_infections_subpop, new_infections_families, n_recovered_families, n_recovered_subpop;
 	
 	for (int i=0;i<n_steps & *date < N_DAYS;++i) {
-		mingleFortranPop(&population, &key_subpop, &n_subpops, date, &n_infected_subpop, &n_dead_subpop);
-		mingleFortranPop(&population, &family, &n_families, date, &n_infected_families, &n_dead_families);
+		mingleFortranPop(&population, &key_subpop, &n_subpops, date, &new_infections_subpop, &n_dead_subpop, &n_recovered_subpop);
+		mingleFortranPop(&population, &family, &n_families, date, &new_infections_families, &n_dead_families, &n_recovered_families);
 
-		report->n_infected[*date] = n_infected_subpop + n_infected_families;
+		report->n_infected[*date] = getCurrentInfected(&population);
 		report->n_dead[*date] = n_dead_subpop + n_dead_families;
+		report->new_infections[*date] = new_infections_subpop + new_infections_families;
+		report->n_recovered[*date] = n_recovered_subpop + n_recovered_families;
 
 		*date += 1;
 	}
@@ -111,9 +114,9 @@ void step_week(int *date, PandemicReport *report) {
 }
 
 void write_output(FILE* fout, const PandemicReport* report) {
-	fprintf(fout, "DATE,NUM_INFECTED,NUM_DEAD\n");
+	fprintf(fout, "DATE,NUM_INFECTED,NEW_INFECTIONS,NUM_DEAD\n");
 	for (int i=0;i < report->n_days;++i)
-		fprintf(fout, "%d,%lu,%lu\n",i, report->n_infected[i], report->n_dead[i]);
+		fprintf(fout, "%d,%lu,%lu,%lu\n",i, report->n_infected[i], report->new_infections[i], report->n_dead[i]);
 		
 }
 
@@ -123,6 +126,8 @@ PandemicReport init_report(size_t n_days) {
 	new_report.n_days = n_days;
 	new_report.n_dead = malloc(n_days * sizeof(size_t));
 	new_report.n_infected = malloc(n_days * sizeof(size_t));
+	new_report.new_infections = malloc(n_days * sizeof(size_t));
+	new_report.n_recovered = malloc(n_days * sizeof(size_t));
 
 	return new_report;
 

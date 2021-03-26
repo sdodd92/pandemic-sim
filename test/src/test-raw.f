@@ -5,15 +5,17 @@ use omp_lib
 implicit none
 
 
-integer, parameter :: POP_SIZE = 10000000
+integer, parameter :: POP_SIZE = 1000000
+!integer, parameter :: POP_SIZE = 66000000
 integer, parameter :: SOCIABILITY = 20
-integer, parameter :: N_COMMUNITIES = 2000000
+integer, parameter :: N_COMMUNITIES = 200000
+!integer, parameter :: N_COMMUNITIES = 13000000
 integer, parameter :: N_DAYS = 30
 
 real, parameter :: COMPLIANCE = 0.5
 real, parameter :: RESISTANCE = 0.5
 
-integer :: i, d, num_infected(N_DAYS), num_died(N_DAYS)
+integer :: i, d, num_infected(N_DAYS), num_died(N_DAYS), new_infections(N_DAYS), recovered(N_DAYS)
 
 type(pathogen), target :: virus
 
@@ -33,7 +35,7 @@ virus%latent_period = LATENT_PERIOD
 
 
 call random_seed
-call omp_set_num_threads(11)
+!call omp_set_num_threads(1)
 
 call define_pop(mypop, POP_SIZE)
 call define_subpops(mypop, subpops, SOCIABILITY)
@@ -47,9 +49,10 @@ call initiate_infection(mypop, 1, 1, virus)
 
 
 do d = 1, N_DAYS
-	call mingle(mypop, subpops, d, num_infected(d))
+	call mingle(mypop, subpops, d, new_infections(d))
 !	call mingle(mypop, families, d, num_infected(d))
-	call update(mypop, d, num_died(d))
+	num_infected(d) = count(mypop%infected > 0)
+	call update(mypop, d, num_died(d), recovered(d))
 end do
 
 
@@ -57,7 +60,7 @@ end do
 
 
 do i=1, N_DAYS
-	print *, i, "," , num_infected(i), ",", num_died(i)
+	print *, i, "," , num_infected(i), ",", new_infections(i), ",", num_died(i), ",", recovered(i)
 end do
 
 

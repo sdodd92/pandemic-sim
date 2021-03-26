@@ -126,16 +126,17 @@ subroutine define_families(pop, families, avg_family_size)
 	type(sub_pop), dimension(:), allocatable, intent(out) :: families
 	real, intent(in) :: avg_family_size
 
+	!define a bool array stating whether each individual population index defines a family boundary
 	logical, dimension(:) :: family_boundary(pop%pop_size)
 
 	integer, dimension(:), allocatable :: lower_bounds, upper_bounds	
 
 	integer :: i, j, lower_bound=1, upper_bound=1, num_families=0, family_size
 
-
+	!initialize the list of family boundaries as empty
 	family_boundary = .false.
 	
-
+	!first, iterate over the entire population, defining families as stepwise random-sized intervals
 	do while (upper_bound .lt. pop%pop_size)
 		family_size = funPoissonSingle(avg_family_size)
 		upper_bound = lower_bound + family_size
@@ -143,7 +144,7 @@ subroutine define_families(pop, families, avg_family_size)
 			upper_bound = pop%pop_size
 		end if
 		family_boundary(upper_bound) = .true.
-		num_families = num_families + 1
+		num_families = num_families + 1  ! keep a rolling count of the number of families which are defined
 		lower_bound = upper_bound + 1
 	end do
 
@@ -151,6 +152,8 @@ subroutine define_families(pop, families, avg_family_size)
 	allocate(lower_bounds(num_families))
 	allocate(upper_bounds(num_families))
 
+	!next, iterate over the population again
+	!this time, populate arrays defining the indexes of family-group boundaries
 	lower_bounds(1) = 1
 	j = 1
 	do i=1, pop%pop_size
@@ -164,6 +167,8 @@ subroutine define_families(pop, families, avg_family_size)
 	end do
 
 	
+	!finally, for all the families which were defined, allocate the appropriate sub-population
+	!use the pre-defined upper/lower-bound arrays to select the appropriate members for each family
 	do i=1, num_families
 		associate(lower_bound => lower_bounds(i), upper_bound => upper_bounds(i))
 			family_size = upper_bound - lower_bound + 1
@@ -197,6 +202,16 @@ function get_num_dead(pop) result(count_dead)
 end function get_num_dead
 
 subroutine mingle_subpop(pop, subpop, date, new_infections)
+	!=======================================================================================================================
+	! this is the core mechanism of cross-exposure to infections
+	! using the subset of relevant population members as defined by the subpopulation object,
+	! we first extract all infections which are present in the subpopulation, then expose all 
+	! non-infected members of the subpopulation to each of these infections.
+	! 
+	! In its current form, the algorithm iterates over infections in deterministic order based on the index of the host
+	! therefore, in cases of multiple exposure there will be an artificial bias towards infections carried by lower-indexed
+	! members of the population. 
+	!=======================================================================================================================
 	type(population), intent(inout) :: pop
 	type(sub_pop), intent(in) :: subpop
 	integer, intent(in) :: date
@@ -223,21 +238,25 @@ subroutine mingle_subpop(pop, subpop, date, new_infections)
 			!compute overall infection probability by combining all contagiousness factors
 			!remember to exclude infections which are still within their latency period
 
-			effective_contagious = contagious * (1 + subpop%spreader_factor)
-			contagion_factor = 1 - product(1 - effective_contagious)
+			effective_contagious = contagious * (1 + subpop%spreader_factor)  !adjust the contagion level by the inherent risk factor of the subpopulation
 
 
+			!populate a temporary array with infections present in the subpopulation
 			count_contagious = count(effective_contagious > 0)
 			allocate(valid_infections(count_contagious))
-			valid_infections = pack(infections, contagious > 0)	
+			valid_infections = pack(infections, effective_contagious > 0)	
 
+			!population another temporary array with the contagiousness levels associated with these infections
 			allocate(valid_contagious(count_contagious))
 			valid_contagious = pack(effective_contagious, effective_contagious > 0)
 
-			
-			if (contagion_factor > 0) then
+			!only trigger the loop if at least one possible infection has been found
+			if (count_contagious > 0) then
+				!generate a random array for calling probabilistic infection events
 				allocate(roll_to_infect(size(subpop%members)))
 				call random_number(roll_to_infect)
+				
+				!loop to expose each member of the subpopulation
 				do i=1, size(subpop%members)
 					associate (									&
 						member_infected => infected(i), 		&
@@ -246,14 +265,19 @@ subroutine mingle_subpop(pop, subpop, date, new_infections)
 						member_immune => immune(i),				&
 						member => subpop%members(i)				&
 					)
+						!skip members who are immune or dead
 						if ((.not. member_immune) .and. member_alive) then 
+							!nested loop to expose each member to each infection
 							do j=1, count_contagious
+
+								!if an infection event occurs, update the new infectee's information
 								!TODO think about what happens with multiple infections
 								if (roll_to_infect(i) < valid_contagious(j)) then
 									pop%infected(member) = date !remember subpop is an index vector
 									pop%infection(member)%ptr => valid_infections(j)%ptr
 									pop%immune(member) = .true.
 									new_infections = new_infections + 1
+									exit  !TODO understand why this is necesary...
 								end if
 							end do
 						end if
@@ -283,7 +307,7 @@ subroutine mingle(pop, subpops, date, new_infections)
 
 	new_infections = 0
 	
-	!$omp parallel do 
+	!$omp parallel do private(tmp_new_infections) reduction(+:new_infections)
 	do i=1, size(subpops)
 		call mingle_subpop(pop, subpops(i), date, tmp_new_infections)
 		new_infections = new_infections + tmp_new_infections
@@ -293,10 +317,10 @@ subroutine mingle(pop, subpops, date, new_infections)
 
 end subroutine mingle
 
-subroutine update(pop, date, new_dead)
+subroutine update(pop, date, new_dead, recovered)
 	type(population), intent(inout) :: pop
 	integer, intent(in) :: date
-	integer, intent(out) :: new_dead
+	integer, intent(out) :: new_dead, recovered
 	
 	real :: roll_to_kill(pop%pop_size)
 	integer :: disease_age(pop%pop_size)
@@ -329,6 +353,8 @@ subroutine update(pop, date, new_dead)
 
 	call random_number(roll_to_kill)
 
+	recovered = 0
+
 	!$omp parallel do
 	do i=1, pop%pop_size
 		associate (												&
@@ -350,6 +376,7 @@ subroutine update(pop, date, new_dead)
 				elseif (disease_age > infection%disease_length .and. alive) then
 					pop%infected(i) = 0
 					pop%contagious(i) = 0.
+					recovered = recovered + 1
 				end if 
 			end if
 		end associate

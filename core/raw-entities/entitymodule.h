@@ -1,8 +1,8 @@
 /*
- * entities_module.h
- *
- *  Created on: 1 Mar 2021
- *      Author: sam
+ 	entitymodule.h
+ 
+   Created on: 1 Mar 2021
+       Author: sam
  */
 
 #ifndef CORE_RAW_ENTITIES_ENTITYMODULE_H_
@@ -15,7 +15,7 @@
 
 		void defineFortranPop(void* pop, long *pop_size);
 
-		void mingleFortranPop(void *population, void *subpops, long *n_subpops, int *date, long *new_infected, long *new_died);
+		void mingleFortranPop(void *population, void *subpops, long *n_subpops, int *date, long *new_infected, long *new_died, long *recovered);
 
 		 void getFortranNumDied(void *population, long *num_infected);
 
@@ -24,6 +24,10 @@
 		void initFortranInfection(void *pop, double *contagious, double *mortality, int *length, int *latency, int *date, long *index);
 
 		void defineFortranFamilies(void *families, void *pop, long *n_families, int *avg_family_size);
+		
+		long getCurrentInfected(void *population);
+
+		void updateSpreaderFactor(void *subpops, float *new_spreader_factor);
 
 #ifdef __cplusplus
 	}
