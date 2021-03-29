@@ -10,6 +10,7 @@
 
 #include "Pathogen.h"
 #include "SubPopulation.h"
+#include "../raw-entities/entitymodule.h"
 #include <vector>
 
 
@@ -28,11 +29,10 @@ public:
 
 	void define_subpops(long n_subpops, int sociability);
 
-	void mingle(int date, long &new_infected, long &new_dead);
-
-	long get_num_infected();
+	void mingle(int date, long &new_infected, long &new_dead, long &recovered);
 
 	void initiate_infection(Pathogen &pathogen, int date, long index=0);
+	long get_num_infected() {return getCurrentInfected(&f_population);};
 
 	SubPopulation* define_generic_subpops(long n_subpops, int avg_pop_size);
 	SubPopulation* define_families(int avg_family_size);

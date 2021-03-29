@@ -39,11 +39,19 @@ SubPopulation::SubPopulation(SuperCommunity* base_pop, int avg_family_size) {
 	locked_down=false;
 }
 
-void SubPopulation::mingle(int date, long *new_infected, long *new_dead) {
+void SubPopulation::mingle(int date, long *new_infected) {
 
-	if (locked_down)
+	// if the population is fully shut down, it cannot mingle
+	if (locked_down) {
+		*new_infected = 0;
 		return;
+	}
 
-	mingleFortranPop(&population, &subpops, &n_subpops, &date, new_infected, new_dead);
+	mingleFortranPop(&population, &subpops, &n_subpops, &date, new_infected);
+
+}
+
+void SubPopulation::update(int date, long *new_dead, long *recovered) {
+	updatePopulation(&population, &date, new_dead, recovered);
 
 }

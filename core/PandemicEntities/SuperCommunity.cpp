@@ -29,17 +29,11 @@ void SuperCommunity::define_subpops(long n_subpops, int sociability) {
 	this->n_subpops = n_subpops;
 }
 
-void SuperCommunity::mingle(int date, long &new_infected, long &new_dead) {
+void SuperCommunity::mingle(int date, long &new_infected, long &new_dead, long &recovered) {
 	
-	new_infected = 0;
-	new_dead = 0;
-
-
-	long tmp_new_infected, tmp_new_dead;
 	for (auto community : community_layers) {
-		community.mingle(date, &tmp_new_infected, &tmp_new_dead);
-		new_infected += tmp_new_infected;
-		new_dead += tmp_new_dead;
+		community.mingle(date, &new_infected);
+		community.update(date, &new_dead, &recovered);
 	}
 }
 

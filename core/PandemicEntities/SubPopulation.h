@@ -23,8 +23,8 @@ public:
 
 	SubPopulation(SuperCommunity *base_pop, int avg_family_size);
 
-	void mingle(int date, long *new_infected, long *new_dead);
-
+	void mingle(int date, long *new_infected);
+	void update(int date, long *dead, long *recovered);
 	void set_lockdown() {locked_down=true;};
 	void remove_lockdown() {locked_down=false;};
 
