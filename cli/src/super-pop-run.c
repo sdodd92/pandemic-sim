@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <omp.h>
 
 typedef struct {
 	size_t *n_dead, *n_infected, *new_infections, *n_recovered;
@@ -34,7 +35,7 @@ bool is_weekend;
 	const size_t N_DAYS = 30;
 
 	const double CONTAGIOUSNESS = .5;
-	const double MORTALITY_RATE = .02;
+	const double MORTALITY_RATE = 0;
 	const int DISEASE_LENGTH = 31;
 	const int LATENCY = 2;
 
@@ -43,6 +44,9 @@ bool is_weekend;
 
 
 int main(int argc, char** argv) {
+
+	int n_threads = argc > 1 ? atoi(argv[1]) : 1;
+	omp_set_num_threads(n_threads);
 
 	n_offices = POP_SIZE / WORK_SIZE;
 
@@ -71,7 +75,7 @@ int main(int argc, char** argv) {
 	FILE *output = fopen("run-result.csv", "w");
 	write_output(output, &report);	
 	fclose(output);
-
+//
 //	puts("DATE,NUM_INFECTED,NEW_INFECTIONS,NUM_DEAD\n");
 //	for (int i=0;i < report.n_days;++i)
 //		printf("%d,%lu,%lu,%lu\n",i, report.n_infected[i], report.new_infections[i], report.n_dead[i]);
@@ -97,16 +101,25 @@ void step_week(int *date, PandemicReport *report) {
 		is_weekend = true;
 	}
 
-	long n_dead_subpop, n_dead_families, new_infections_subpop, new_infections_families, n_recovered_families, n_recovered_subpop;
+	long n_dead, n_recovered, new_infections_subpop, new_infections_families;
 	
 	for (int i=0;i<n_steps & *date < N_DAYS;++i) {
-		mingleFortranPop(&population, &key_subpop, &n_subpops, date, &new_infections_subpop, &n_dead_subpop, &n_recovered_subpop);
-		mingleFortranPop(&population, &family, &n_families, date, &new_infections_families, &n_dead_families, &n_recovered_families);
+		// both sets of subpopulations mingle BEFORE the health update is computed
+		mingleFortranPop(&population, &key_subpop, &n_subpops, date, &new_infections_subpop);
+		mingleFortranPop(&population, &family, &n_families, date, &new_infections_families);
+
+//		report->n_infected[*date] = getCurrentInfected(&population);
+
+
+		// separately run the health update after all the day's mingling has occurred
+		updatePopulation(&population, date, &n_dead, &n_recovered);
+
+		
+		report->new_infections[*date] = new_infections_subpop + new_infections_families;
+		report->n_dead[*date] = n_dead;
+		report->n_recovered[*date] = n_recovered;
 
 		report->n_infected[*date] = getCurrentInfected(&population);
-		report->n_dead[*date] = n_dead_subpop + n_dead_families;
-		report->new_infections[*date] = new_infections_subpop + new_infections_families;
-		report->n_recovered[*date] = n_recovered_subpop + n_recovered_families;
 
 		*date += 1;
 	}

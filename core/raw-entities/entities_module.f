@@ -2,6 +2,7 @@ module entities
 
 
 use utils
+use omp_lib
 implicit none
 
 
@@ -201,7 +202,7 @@ function get_num_dead(pop) result(count_dead)
 	count_dead = count(.not. pop%alive)
 end function get_num_dead
 
-subroutine mingle_subpop(pop, subpop, date, new_infections)
+subroutine mingle_subpop(pop, subpop, date, new_infections, pop_lock)
 	!=======================================================================================================================
 	! this is the core mechanism of cross-exposure to infections
 	! using the subset of relevant population members as defined by the subpopulation object,
@@ -216,6 +217,7 @@ subroutine mingle_subpop(pop, subpop, date, new_infections)
 	type(sub_pop), intent(in) :: subpop
 	integer, intent(in) :: date
 	integer, intent(out) :: new_infections
+	integer(kind=omp_lock_kind), dimension(:), intent(inout) :: pop_lock
 
 	real :: effective_contagious(size(subpop%members))
 	real, dimension(:), allocatable :: roll_to_infect
@@ -224,17 +226,17 @@ subroutine mingle_subpop(pop, subpop, date, new_infections)
 	type (pathogen_ptr), dimension(:), allocatable :: valid_infections
 	real, dimension(:), allocatable :: valid_contagious
 
-	integer :: i, j,  infection_age, disease_age, count_contagious	
+	integer :: i, j, member,  infection_age, disease_age, count_contagious	
 
 	new_infections = 0
 
-	associate ( 												&
-			infected => pop%infected(subpop%members(:)), 		&
-			contagious => pop%contagious(subpop%members(:)), 	&
-			immune => pop%immune(subpop%members(:)),			&
-			infections => pop%infection(subpop%members(:)),		&
-			alive => pop%alive(subpop%members(:))				&
-		)
+	!contagious is thread-safe - doesn't get updated within this procedure
+	!
+	!infection ptr's are EFFECTIVELY thread-safe - if we mask by 'contagious' then any new
+	! infections will be invisible at this stage
+	!
+	!all others are NOT inherently thread-safe (given that subpops are not mutually exclusive)
+	associate (contagious => pop%contagious(subpop%members(:)), infections => pop%infection(subpop%members(:)))
 			!compute overall infection probability by combining all contagiousness factors
 			!remember to exclude infections which are still within their latency period
 
@@ -252,21 +254,17 @@ subroutine mingle_subpop(pop, subpop, date, new_infections)
 
 			!only trigger the loop if at least one possible infection has been found
 			if (count_contagious > 0) then
+
 				!generate a random array for calling probabilistic infection events
 				allocate(roll_to_infect(size(subpop%members)))
 				call random_number(roll_to_infect)
 				
 				!loop to expose each member of the subpopulation
 				do i=1, size(subpop%members)
-					associate (									&
-						member_infected => infected(i), 		&
-						member_roll => roll_to_infect(i), 		&
-						member_alive => alive(i),				&
-						member_immune => immune(i),				&
-						member => subpop%members(i)				&
-					)
+					call omp_set_lock(pop_lock(subpop%members(i)))
+					associate (member => subpop%members(i))
 						!skip members who are immune or dead
-						if ((.not. member_immune) .and. member_alive) then 
+						if ((.not. pop%immune(member)) .and. pop%alive(member)) then 
 							!nested loop to expose each member to each infection
 							do j=1, count_contagious
 
@@ -282,7 +280,9 @@ subroutine mingle_subpop(pop, subpop, date, new_infections)
 							end do
 						end if
 					end associate
-				end do  ! j=1, size(subpop)
+					call omp_unset_lock(pop_lock(subpop%members(i)))
+				end do  ! i=1, size(subpop)
+
 				deallocate(roll_to_infect)
 			end if  ! contagion_factor > 0
 
@@ -300,18 +300,36 @@ subroutine mingle(pop, subpops, date, new_infections)
 	type(sub_pop), dimension(:), intent(in), target :: subpops
 	integer, intent(in) :: date
 	integer, intent(out) :: new_infections
+
+	integer(kind=omp_lock_kind), dimension(:), allocatable :: pop_lock
 	
 
 
-	integer :: i, tmp_new_infections
+	integer :: i
+	integer, dimension(:), allocatable :: tmp_new_infections
+
+	allocate(pop_lock(pop%pop_size))
 
 	new_infections = 0
+	allocate(tmp_new_infections(size(subpops)))
+
+
+	do i=1, pop%pop_size
+		call omp_init_lock(pop_lock(i))
+	end do
 	
-	!$omp parallel do private(tmp_new_infections) reduction(+:new_infections)
+	!$omp parallel do
 	do i=1, size(subpops)
-		call mingle_subpop(pop, subpops(i), date, tmp_new_infections)
-		new_infections = new_infections + tmp_new_infections
+		call mingle_subpop(pop, subpops(i), date, tmp_new_infections(i), pop_lock)
 	end do  ! i=1, size(subpops)
+
+	do i=1, pop%pop_size
+		call omp_destroy_lock(pop_lock(i))
+	end do
+	new_infections = sum(tmp_new_infections)
+
+	deallocate(tmp_new_infections)
+	deallocate(pop_lock)
 
 
 
@@ -402,6 +420,8 @@ subroutine initiate_infection(pop, i, date, infection)
 !	print *, "infecting member", i
 	pop%infected(i) = date
 	pop%infection(i)%ptr => infection
+	pop%contagious(i) = infection%contagiousness
+	pop%immune(i) = .true.
 
 end subroutine initiate_infection
 

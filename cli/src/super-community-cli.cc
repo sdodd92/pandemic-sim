@@ -27,14 +27,20 @@ int main() {
 	#endif
 
 	long num_infected[N_DAYS];
+	long new_infected[N_DAYS];
 	long num_died[N_DAYS];
+	long recovered[N_DAYS];
 
 	num_infected[0] = 0;
 	num_died[0] = 0;
+	recovered[0] = 0;
+	new_infected[0];
 
 
-	for (int i=1; i<N_DAYS; ++i)
-		mypop.mingle(i, num_infected[i], num_died[i]);
+	for (int i=1; i<N_DAYS; ++i) {
+		mypop.mingle(i, new_infected[i], num_died[i], recovered[i]);
+		num_infected[i] = mypop.get_num_infected();
+	}
 
 //		mypop.update_health(d);
 //		num_infected[d] = mypop.get_num_infected();

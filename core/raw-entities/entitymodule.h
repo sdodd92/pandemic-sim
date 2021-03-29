@@ -13,9 +13,11 @@
 	extern "C" {
 #endif
 
+		// direct interfaces to the core subroutines (implemented in Fortran)
 		void defineFortranPop(void* pop, long *pop_size);
 
-		void mingleFortranPop(void *population, void *subpops, long *n_subpops, int *date, long *new_infected, long *new_died, long *recovered);
+		void mingleFortranPop(void *population, void *subpops, long *n_subpops, int *date, long *new_infected);
+		void updatePopulation(void *population, int *date, long *new_dead, long *n_recovered);
 
 		 void getFortranNumDied(void *population, long *num_infected);
 
@@ -29,8 +31,10 @@
 
 		void updateSpreaderFactor(void *subpops, float *new_spreader_factor);
 
+
 #ifdef __cplusplus
 	}
 #endif
+
 
 #endif /* CORE_RAW_ENTITIES_ENTITYMODULE_H_ */
