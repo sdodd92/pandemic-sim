@@ -14,22 +14,22 @@
 #endif
 
 		// direct interfaces to the core subroutines (implemented in Fortran)
-		void defineFortranPop(void* pop, long *pop_size);
+		void defineFortranPop(void** pop, long *pop_size);
 
-		void mingleFortranPop(void *population, void *subpops, long *n_subpops, int *date, long *new_infected);
-		void updatePopulation(void *population, int *date, long *new_dead, long *n_recovered);
+		void mingleFortranPop(void **population, void **subpops, long *n_subpops, int *date, long *new_infected);
+		void updatePopulation(void **population, int *date, long *new_dead, long *n_recovered);
 
-		 void getFortranNumDied(void *population, long *num_infected);
+		 void getFortranNumDied(void **population, long *num_infected);
 
-		void defineFortranSubPops(void *subpops, void *population, long *n_subpops, int *sociability);
+		void defineFortranSubPops(void **subpops, void **population, long *n_subpops, int *sociability);
 
-		void initFortranInfection(void *pop, double *contagious, double *mortality, int *length, int *latency, int *date, long *index);
+		void initFortranInfection(void **pop, double *contagious, double *mortality, int *length, int *latency, int *date, long *index);
 
-		void defineFortranFamilies(void *families, void *pop, long *n_families, int *avg_family_size);
+		void defineFortranFamilies(void **families, void **pop, long *n_families, int *avg_family_size);
 		
-		long getCurrentInfected(void *population);
+		long getCurrentInfected(void **population);
 
-		void updateSpreaderFactor(void *subpops, float *new_spreader_factor);
+		void updateSpreaderFactor(void **subpops, float *new_spreader_factor);
 
 
 #ifdef __cplusplus
