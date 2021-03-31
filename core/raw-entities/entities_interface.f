@@ -1,4 +1,4 @@
-subroutine wrap_pop_c(pop_c, pop_size) bind(c, name='defineFortranPop')
+subroutine wrap_pop_c(pop_c, pop_size) bind(c, name='allocatePopulation')
 	use entities
 	use iso_c_binding
 
@@ -15,7 +15,7 @@ subroutine wrap_pop_c(pop_c, pop_size) bind(c, name='defineFortranPop')
 
 end subroutine wrap_pop_c
 
-subroutine wrap_subpops_c(subpops_c, pop_c, n_subpops, sociability) bind(c, name='defineFortranSubPops')
+subroutine wrap_subpops_c(subpops_c, pop_c, n_subpops, sociability) bind(c, name='allocateSubPops')
 
 	use entities
 	use iso_c_binding
@@ -41,7 +41,7 @@ subroutine wrap_subpops_c(subpops_c, pop_c, n_subpops, sociability) bind(c, name
 
 end subroutine wrap_subpops_c
 
-subroutine wrap_families_c(families_c, pop_c, n_families, avg_family_size) bind(c, name='defineFortranFamilies')
+subroutine wrap_families_c(families_c, pop_c, n_families, avg_family_size) bind(c, name='allocateFamilies')
 
 	use entities
 	use iso_c_binding
@@ -71,7 +71,7 @@ subroutine wrap_families_c(families_c, pop_c, n_families, avg_family_size) bind(
 end subroutine wrap_families_c
 
 
-subroutine mingle_pop_c(pop_c, subpops_c, n_subpops, c_date, new_infected) bind(c, name='mingleFortranPop')
+subroutine mingle_pop_c(pop_c, subpops_c, n_subpops, c_date, new_infected) bind(c, name='minglePopulation')
 	
 	use entities
 	use iso_c_binding
@@ -119,7 +119,7 @@ subroutine update_pop_c(pop_c, c_date, new_dead, n_recovered) bind(c, name='upda
 end subroutine update_pop_c
 
 subroutine wrap_c_pathogen(pop_c, contagious, mortality, length, latency, date, ind) &
-	 bind(c, name='initFortranInfection')
+	 bind(c, name='initiateInfection')
 
 
 	
@@ -167,6 +167,23 @@ function get_number_infected(pop_c) result(n_infected) bind(c, name='getCurrentI
 
 end function get_number_infected
 
+function get_number_dead(pop_c) result(n_dead) bind(c, name='getNumDied')
+
+	use entities
+	use iso_c_binding
+
+	type(c_ptr), intent(in) :: pop_c
+	integer(kind=c_long) :: n_infected
+
+	type(population), pointer :: pop_f
+
+	call c_f_pointer(pop_c, pop_f)
+
+	n_dead = count(.not. pop_f%alive)
+
+
+end function get_number_dead
+
 subroutine update_spreader_factors(subpops_c, new_spreader_factor, n_subpops) bind(c, name='updateSpreaderFactor')
 	use entities
 	use iso_c_binding
@@ -188,3 +205,38 @@ subroutine update_spreader_factors(subpops_c, new_spreader_factor, n_subpops) bi
 
 
 end subroutine update_spreader_factors
+
+subroutine update_sociabilities(subpops_c, new_sociability, n_subpops) bind(c, name='updateSociability')
+	use entities
+	use iso_c_binding
+
+	type(c_ptr), intent(inout) :: subpops_c
+	real(kind=c_float), intent(in) :: new_sociability
+	integer(kind=c_long), intent(in) :: n_subpops
+
+	type(sub_pop), dimension(:), pointer :: subpops_f
+
+	integer :: i
+
+
+	call c_f_pointer(subpops_c, subpops_f, [n_subpops])
+	
+	do i=1, size(subpops_f)
+		subpops_f(i)%sociability = new_sociability
+	end do
+
+end subroutine update_sociabilities
+
+subroutine nullify_pop(pop_c) bind(c, name='nullifyPopulation')
+
+	use entities
+	use iso_c_binding
+
+	type(c_ptr), intent(inout) :: pop_c
+	type(population), pointer :: pop_f
+
+	call c_f_pointer(pop_c, pop_f)
+
+	nullify(pop_f)
+
+end subroutine nullify_pop

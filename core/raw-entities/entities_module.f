@@ -12,7 +12,7 @@ end type family_structure
 
 type sub_pop
 	integer, dimension(:), allocatable :: members
-	real :: spreader_factor = 0. 
+	real :: spreader_factor = 0., sociability = 1.01
 end type sub_pop
 
 type pathogen
@@ -121,6 +121,18 @@ subroutine define_subpops(pop, subpops, avg_pop_size)
 
 end subroutine define_subpops 
 
+
+subroutine define_bounded_subpops(pop, subpops, n_subpops, avg_pop_size)
+	type(population), intent(in) :: pop
+	type(sub_pop), dimension(:), intent(inout) :: subpops
+	integer, intent(in) :: avg_pop_size, n_subpops
+
+	integer :: i
+	
+
+
+end subroutine define_bounded_subpops
+
 subroutine define_families(pop, families, avg_family_size)
 
 	type(population), intent(in) :: pop
@@ -219,14 +231,13 @@ subroutine mingle_subpop(pop, subpop, date, new_infections, pop_lock)
 	integer, intent(out) :: new_infections
 	integer(kind=omp_lock_kind), dimension(:), intent(inout) :: pop_lock
 
-	real :: effective_contagious(size(subpop%members))
-	real, dimension(:), allocatable :: roll_to_infect
-	real :: contagion_factor
+	real :: effective_contagious(size(subpop%members)), roll_to_interact(size(subpop%members)), contagion_factor
+	real, dimension(:), allocatable :: roll_to_infect, valid_contagious
 	
 	type (pathogen_ptr), dimension(:), allocatable :: valid_infections
-	real, dimension(:), allocatable :: valid_contagious
+	integer, dimension(:), allocatable :: interactees
 
-	integer :: i, j, member,  infection_age, disease_age, count_contagious	
+	integer :: i, j, member,  infection_age, disease_age, count_contagious, exposure_count
 
 	new_infections = 0
 
@@ -237,9 +248,9 @@ subroutine mingle_subpop(pop, subpop, date, new_infections, pop_lock)
 	!
 	!all others are NOT inherently thread-safe (given that subpops are not mutually exclusive)
 	associate (contagious => pop%contagious(subpop%members(:)), infections => pop%infection(subpop%members(:)))
+
 			!compute overall infection probability by combining all contagiousness factors
 			!remember to exclude infections which are still within their latency period
-
 			effective_contagious = contagious * (1 + subpop%spreader_factor)  !adjust the contagion level by the inherent risk factor of the subpopulation
 
 
@@ -253,43 +264,47 @@ subroutine mingle_subpop(pop, subpop, date, new_infections, pop_lock)
 			valid_contagious = pack(effective_contagious, effective_contagious > 0)
 
 			!only trigger the loop if at least one possible infection has been found
-			if (count_contagious > 0) then
+			do i=1, count_contagious
+		
+				call random_number(roll_to_interact)
+
+				exposure_count = count(roll_to_interact .lt. subpop%sociability)
+				allocate(interactees(exposure_count))
+				interactees = pack(subpop%members, roll_to_interact .lt. subpop%sociability)
+
 
 				!generate a random array for calling probabilistic infection events
-				allocate(roll_to_infect(size(subpop%members)))
+				allocate(roll_to_infect(exposure_count))
 				call random_number(roll_to_infect)
 				
 				!loop to expose each member of the subpopulation
-				do i=1, size(subpop%members)
-					call omp_set_lock(pop_lock(subpop%members(i)))
-					associate (member => subpop%members(i))
+				do j=1, exposure_count
+					call omp_set_lock(pop_lock(interactees(j)))
+					associate (member => interactees(j))
 						!skip members who are immune or dead
 						if ((.not. pop%immune(member)) .and. pop%alive(member)) then 
 							!nested loop to expose each member to each infection
-							do j=1, count_contagious
-
-								!if an infection event occurs, update the new infectee's information
-								!TODO think about what happens with multiple infections
-								if (roll_to_infect(i) < valid_contagious(j)) then
-									pop%infected(member) = date !remember subpop is an index vector
-									pop%infection(member)%ptr => valid_infections(j)%ptr
-									pop%immune(member) = .true.
-									new_infections = new_infections + 1
-									exit  !TODO understand why this is necesary...
-								end if
-							end do
+							!if an infection event occurs, update the new infectee's information
+							!TODO think about what happens with multiple infections
+							if (roll_to_infect(j) < valid_contagious(i)) then
+								pop%infected(member) = date !remember subpop is an index vector
+								pop%infection(member)%ptr => valid_infections(i)%ptr
+								pop%immune(member) = .true.
+								new_infections = new_infections + 1
+							end if
 						end if
-					end associate
-					call omp_unset_lock(pop_lock(subpop%members(i)))
-				end do  ! i=1, size(subpop)
+					end associate  ! member => interactees(j)
+					call omp_unset_lock(pop_lock(interactees(j)))
+				end do  ! j=1, exposure_count
 
+				deallocate(interactees)
 				deallocate(roll_to_infect)
-			end if  ! contagion_factor > 0
+			end do ! i=1, count_contagious
 
 			deallocate(valid_infections)
 			deallocate(valid_contagious)
 
-		end associate
+		end associate ! contagious => pop%contagious(subpop%members(:)),...
 
 
 end subroutine mingle_subpop

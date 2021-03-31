@@ -7,6 +7,7 @@
 
 #ifndef CORE_PANDEMICENTITIES_SUBPOPULATION_H_
 #define CORE_PANDEMICENTITIES_SUBPOPULATION_H_
+#include "../raw-entities/entitymodule.h"
 
 class SuperCommunity;
 
@@ -32,7 +33,8 @@ public:
 
 
 private:
-	void *population, *subpops;
+	Population population;
+	void  *subpops;
 	long /* *subpop_sizes,*/ n_subpops;
 	bool locked_down;
 };

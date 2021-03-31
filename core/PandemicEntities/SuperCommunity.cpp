@@ -11,7 +11,7 @@
 #include "SubPopulation.h"
 
 SuperCommunity::SuperCommunity() {
-	f_population = 0;
+	pop = 0;
 	f_subpops = 0;
 	n_subpops = 0;
 }
@@ -20,12 +20,12 @@ SuperCommunity::SuperCommunity(long pop_size) {
 	f_subpops = 0;
 
 	n_subpops = 0;
-	defineFortranPop(&f_population, &pop_size);
+	pop = newPopulation(pop_size);
 //		defineFortranPop(f_population, &pop_size);
 }
 
 void SuperCommunity::define_subpops(long n_subpops, int sociability) {
-	defineFortranSubPops(&f_subpops, &f_population, &n_subpops, &sociability);
+	allocateSubPops(&f_subpops, pop, &n_subpops, &sociability);
 	this->n_subpops = n_subpops;
 }
 
@@ -45,8 +45,8 @@ void SuperCommunity::initiate_infection(Pathogen &pathogen, int date, long index
 	double mortality_rate = pathogen.get_mortality_rate();
 	int disease_length = pathogen.get_disease_length();
 	int latent_period = pathogen.get_latent_period();
-	initFortranInfection(
-		&f_population,
+	initiateInfection(
+		pop,
 		&contagiousness,
 		&mortality_rate,
 		&disease_length,

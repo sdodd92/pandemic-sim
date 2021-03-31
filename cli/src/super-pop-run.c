@@ -14,10 +14,10 @@ PandemicReport init_report(size_t n_days);
 void write_output(FILE* fout, const PandemicReport* report);
 
 // forward-declare pointers to sub-populations
-void *population, *family, *work, *social;
+void *family, *work, *social;
 
 // forward-declare subroutines to run aggregate time-steps
-void step_week(int *date, PandemicReport *report);
+void step_week(int *date, PandemicReport *report, Population population);
 
 bool is_weekend;
 
@@ -50,40 +50,44 @@ int main(int argc, char** argv) {
 
 	n_offices = POP_SIZE / WORK_SIZE;
 
-	defineFortranPop(&population, &POP_SIZE);
+	Population population = newPopulation(POP_SIZE);
+
+//	defineFortranPop(&population, &POP_SIZE);
 
 	// TODO change this to guarantee exclusivity
-	defineFortranSubPops(&work, &population, &n_offices, &WORK_SIZE);
+	allocateSubPops(&work, population, &n_offices, &WORK_SIZE);
 
-	defineFortranSubPops(&social, &population, &N_COMMUNITIES, &SOCIABILITY);
+	allocateSubPops(&social, population, &N_COMMUNITIES, &SOCIABILITY);
 
-	defineFortranFamilies(&family, &population, &n_families, &FAMILY_SIZE);
+	allocateFamilies(&family, population, &n_families, &FAMILY_SIZE);
 
 	PandemicReport report = init_report(N_DAYS);	
 	
 	int date = 0;
 	int infection_index = 0;
 
-	initFortranInfection(&population, &CONTAGIOUSNESS, &MORTALITY_RATE, &DISEASE_LENGTH, &LATENCY, &date, &infection_index); 
+	initiateInfection(population, &CONTAGIOUSNESS, &MORTALITY_RATE, &DISEASE_LENGTH, &LATENCY, &date, &infection_index); 
 	
 	is_weekend = false;
 	while (date < N_DAYS) {
-		step_week(&date, &report);
+		step_week(&date, &report, population);
 
 	}
 
-	FILE *output = fopen("run-result.csv", "w");
-	write_output(output, &report);	
-	fclose(output);
+//	FILE *output = fopen("run-result.csv", "w");
+//	write_output(output, &report);	
+//	fclose(output);
 //
-//	puts("DATE,NUM_INFECTED,NEW_INFECTIONS,NUM_DEAD\n");
-//	for (int i=0;i < report.n_days;++i)
-//		printf("%d,%lu,%lu,%lu\n",i, report.n_infected[i], report.new_infections[i], report.n_dead[i]);
+	puts("DATE,NUM_INFECTED,NEW_INFECTIONS,NUM_DEAD\n");
+	for (int i=0;i < report.n_days;++i)
+		printf("%d,%lu,%lu,%lu\n",i, report.n_infected[i], report.new_infections[i], report.n_dead[i]);
+
+	freePopulation(population);
 
 	return 0;
 }
 
-void step_week(int *date, PandemicReport *report) {
+void step_week(int *date, PandemicReport *report, Population population) {
 	short n_steps;
 	void *key_subpop;
 	long n_subpops;
@@ -105,21 +109,21 @@ void step_week(int *date, PandemicReport *report) {
 	
 	for (int i=0;i<n_steps & *date < N_DAYS;++i) {
 		// both sets of subpopulations mingle BEFORE the health update is computed
-		mingleFortranPop(&population, &key_subpop, &n_subpops, date, &new_infections_subpop);
-		mingleFortranPop(&population, &family, &n_families, date, &new_infections_families);
+		minglePopulation(population, &key_subpop, &n_subpops, date, &new_infections_subpop);
+		minglePopulation(population, &family, &n_families, date, &new_infections_families);
 
-//		report->n_infected[*date] = getCurrentInfected(&population);
+//		report->n_infected[*date] = getCurrentInfected(population);
 
 
 		// separately run the health update after all the day's mingling has occurred
-		updatePopulation(&population, date, &n_dead, &n_recovered);
+		updatePopulation(population, date, &n_dead, &n_recovered);
 
 		
 		report->new_infections[*date] = new_infections_subpop + new_infections_families;
 		report->n_dead[*date] = n_dead;
 		report->n_recovered[*date] = n_recovered;
 
-		report->n_infected[*date] = getCurrentInfected(&population);
+		report->n_infected[*date] = getCurrentInfected(population);
 
 		*date += 1;
 	}

@@ -32,14 +32,15 @@ public:
 	void mingle(int date, long &new_infected, long &new_dead, long &recovered);
 
 	void initiate_infection(Pathogen &pathogen, int date, long index=0);
-	long get_num_infected() {return getCurrentInfected(&f_population);};
+	long get_num_infected() {return getCurrentInfected(pop);};
 
 	SubPopulation* define_generic_subpops(long n_subpops, int avg_pop_size);
 	SubPopulation* define_families(int avg_family_size);
 
 
 protected:
-	void *f_population, *f_subpops;
+	Population pop;
+	void  *f_subpops;
 	long n_subpops;
 	std::vector<SubPopulation> community_layers;
 };

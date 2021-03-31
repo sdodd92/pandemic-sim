@@ -19,7 +19,7 @@ SubPopulation::SubPopulation() {
 }
 
 SubPopulation::SubPopulation(SuperCommunity* base_pop) {
-	this->population = base_pop->f_population;
+	this->population = base_pop->pop;
 	subpops=0;
 	n_subpops=0;
 	locked_down=false;
@@ -27,15 +27,15 @@ SubPopulation::SubPopulation(SuperCommunity* base_pop) {
 }
 
 SubPopulation::SubPopulation(SuperCommunity* base_pop, long n_subpops, int avg_pop_size) {
-	defineFortranSubPops(&subpops, &(base_pop->f_population), &n_subpops, &avg_pop_size);
-	this->population = base_pop->f_population;
+	allocateSubPops(&subpops, base_pop->pop, &n_subpops, &avg_pop_size);
+	this->population = base_pop->pop;
 	this->n_subpops = n_subpops;
 	locked_down=false;
 }
 
 SubPopulation::SubPopulation(SuperCommunity* base_pop, int avg_family_size) {
-	defineFortranFamilies(&subpops, &(base_pop->f_population), &n_subpops, &avg_family_size);
-	this->population = base_pop->f_population;
+	allocateFamilies(&subpops, base_pop->pop, &n_subpops, &avg_family_size);
+	this->population = base_pop->pop;
 	locked_down=false;
 }
 
@@ -47,11 +47,11 @@ void SubPopulation::mingle(int date, long *new_infected) {
 		return;
 	}
 
-	mingleFortranPop(&population, &subpops, &n_subpops, &date, new_infected);
+	minglePopulation(population, &subpops, &n_subpops, &date, new_infected);
 
 }
 
 void SubPopulation::update(int date, long *new_dead, long *recovered) {
-	updatePopulation(&population, &date, new_dead, recovered);
+	updatePopulation(population, &date, new_dead, recovered);
 
 }
