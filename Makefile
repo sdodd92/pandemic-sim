@@ -30,8 +30,14 @@ super-build: lib/libentitymodule.a lib/libpandemicentities.a
 raw-test: lib/libentitymodule.a
 	$(FC) -o test/bin/raw-entity-test test/src/test-raw.f -lentitymodule -lgomp
 
+simple-test: lib/libentitymodule.a
+	$(FC) -o test/bin/small-test test/src/simple-test.f -lentitymodule -lgomp
+
 run-build: lib/libentitymodule.a
-	$(CC) -o bin/run-sim cli/src/super-pop-run.c -lentitymodule -lgfortran  -lm -ldl
+	$(CC) -o bin/run-sim cli/src/super-pop-run.c -lentitymodule -lgfortran  -lm -ldl -lgomp
+
+super-cli: lib/libentitymodule.a
+	$(FC) -o bin/pandem-cli cli/src/population-run.f90 -lentitymodule -lgomp
 	
 
 static-build: lib/libpandemicentities.a
