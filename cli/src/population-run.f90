@@ -49,6 +49,7 @@ call define_subpops(mypop, social, SOCIABILITY)
 call define_subpops(mypop, work, WORK_SIZE)
 call define_families(mypop, families, FAMILY_SIZE)
 
+
 call initiate_infection(mypop, 1, 1, virus)
 
 date = 1
@@ -56,13 +57,13 @@ do while (date <= N_DAYS)
 	call step_week
 end do
 
-open(1, file='cli-output.csv', status='new')
-output_handle = 1
-!output_handle = output_unit
+!open(1, file='cli-output.csv', status='replace')
+!output_handle = 1
+output_handle = output_unit
 
 call write_output(output_handle)
 
-close(1)
+!close(1)
 
 CONTAINS !============================================================================================ 
 
